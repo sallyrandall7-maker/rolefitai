@@ -69,9 +69,29 @@ h1 {
   gap: 10px;
 }
 
-.field span {
+.field-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   color: #182235;
   font-weight: 700;
+}
+
+.sample-button {
+  border: 1px solid #cfe4dd;
+  border-radius: 8px;
+  padding: 7px 10px;
+  color: #215b4c;
+  background: #eef8f4;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sample-button:hover {
+  border-color: #acd1c5;
+  background: #e2f3ed;
 }
 
 textarea {
@@ -343,6 +363,12 @@ textarea:focus {
 
   .loading-steps {
     grid-template-columns: 1fr;
+  }
+
+  .field-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
   }
 
   textarea {

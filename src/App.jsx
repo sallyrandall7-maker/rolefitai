@@ -7,6 +7,7 @@ import {
   Search,
   Sparkles
 } from "lucide-react";
+import { sampleJobDescription, sampleResume } from "./sampleData.js";
 
 const API_URL = import.meta.env.PROD
   ? "/api/analyse"
@@ -89,7 +90,16 @@ function App() {
 
       <section className="workspace" aria-label="Resume and job description form">
         <label className="field">
-          <span>Resume</span>
+          <span className="field-heading">
+            Resume
+            <button
+              className="sample-button"
+              onClick={() => setResume(sampleResume)}
+              type="button"
+            >
+              Load sample resume
+            </button>
+          </span>
           <textarea
             value={resume}
             onChange={(event) => setResume(event.target.value)}
@@ -98,7 +108,16 @@ function App() {
         </label>
 
         <label className="field">
-          <span>Job Description</span>
+          <span className="field-heading">
+            Job Description
+            <button
+              className="sample-button"
+              onClick={() => setJobDescription(sampleJobDescription)}
+              type="button"
+            >
+              Load sample job
+            </button>
+          </span>
           <textarea
             value={jobDescription}
             onChange={(event) => setJobDescription(event.target.value)}
