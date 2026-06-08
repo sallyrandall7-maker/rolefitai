@@ -158,18 +158,25 @@ function App() {
         </label>
       </section>
 
-      <div className="tabs" aria-label="Analysis modules">
-        {analysisTabs.map((tab) => (
-          <button
-            className={activeTab === tab.id ? "tab-button active" : "tab-button"}
-            key={tab.id}
-            onClick={() => handleTabChange(tab.id)}
-            type="button"
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <section className="tool-picker" aria-label="Choose analysis tool">
+        <div className="tool-picker-heading">
+          <p className="tool-picker-label">Choose tool</p>
+          <h2>{activeAnalysis.label}</h2>
+        </div>
+        <div className="tool-options">
+          {analysisTabs.map((tab) => (
+            <button
+              className={activeTab === tab.id ? "tool-button active" : "tool-button"}
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              type="button"
+            >
+              <span>{tab.label}</span>
+              <small>{tab.emptyText}</small>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <button className="analyse-button" onClick={handleAnalyse} disabled={isAnalysing}>
         <Sparkles size={18} aria-hidden="true" />
@@ -192,8 +199,7 @@ function App() {
             loadingStepIndex={loadingStepIndex}
           />
         )}
-      </section>
-    </main>
+      </section>    </main>
   );
 }
 
