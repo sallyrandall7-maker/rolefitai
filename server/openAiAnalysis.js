@@ -1,9 +1,34 @@
-import { analysisInstructions, buildAnalysisInput } from "./analysisPrompt.js";
-import { analysisSchema } from "./analysisSchema.js";
+import {
+  bulletOptimiserInstructions,
+  buildAnalysisInput,
+  roleMatchInstructions
+} from "./analysisPrompt.js";
+import { bulletOptimiserSchema, roleMatchSchema } from "./analysisSchema.js";
 
 const DEFAULT_MODEL = "gpt-5-mini";
+const analysisConfigs = {
+  roleMatch: {
+    instructions: roleMatchInstructions,
+    schema: roleMatchSchema,
+    schemaName: "rolefit_analysis",
+    maxOutputTokens: 2200
+  },
+  bulletOptimiser: {
+    instructions: bulletOptimiserInstructions,
+    schema: bulletOptimiserSchema,
+    schemaName: "rolefit_bullet_optimiser",
+    maxOutputTokens: 2600
+  }
+};
 
-export async function requestOpenAiAnalysis({ apiKey, resume, jobDescription }) {
+export async function requestOpenAiAnalysis({
+  apiKey,
+  resume,
+  jobDescription,
+  analysisType = "roleMatch"
+}) {
+  const config = analysisConfigs[analysisType] || analysisConfigs.roleMatch;
+
   const openAiResponse = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
@@ -12,9 +37,9 @@ export async function requestOpenAiAnalysis({ apiKey, resume, jobDescription }) 
     },
     body: JSON.stringify({
       model: process.env.OPENAI_MODEL || DEFAULT_MODEL,
-      instructions: analysisInstructions,
+      instructions: config.instructions,
       input: buildAnalysisInput({ resume, jobDescription }),
-      max_output_tokens: 2200,
+      max_output_tokens: config.maxOutputTokens,
       reasoning: {
         effort: "minimal"
       },
@@ -22,9 +47,9 @@ export async function requestOpenAiAnalysis({ apiKey, resume, jobDescription }) 
         verbosity: "low",
         format: {
           type: "json_schema",
-          name: "rolefit_analysis",
+          name: config.schemaName,
           strict: true,
-          schema: analysisSchema
+          schema: config.schema
         }
       }
     })

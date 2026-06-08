@@ -9,8 +9,10 @@ description and returns an AI-powered role fit analysis.
 - Lets you paste a job description into another text box.
 - Sends both pieces of text to a small local server.
 - The local server safely calls the OpenAI API using the key in `.env`.
-- Shows role match score, ATS keyword match, recruiter search simulation,
-  missing keywords, suggestions, risk areas, and likely interview questions.
+- Includes a **Role Match** module for scores, gaps, risks, and interview
+  questions.
+- Includes an **ATS Bullet Optimiser** module for job keywords, weak resume
+  bullets, rewritten bullets, and top fixes.
 
 ## How To Run It
 

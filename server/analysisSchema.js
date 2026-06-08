@@ -1,4 +1,4 @@
-export const analysisSchema = {
+export const roleMatchSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
@@ -45,3 +45,57 @@ export const analysisSchema = {
     "likelyInterviewQuestions"
   ]
 };
+
+export const bulletOptimiserSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    jobKeywords: {
+      type: "array",
+      description: "Important ATS keywords and phrases from the job description.",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          keyword: { type: "string" },
+          importance: {
+            type: "string",
+            enum: ["High", "Medium", "Low"]
+          },
+          resumeStatus: {
+            type: "string",
+            enum: ["Found", "Weak", "Missing"]
+          },
+          whyItMatters: { type: "string" }
+        },
+        required: ["keyword", "importance", "resumeStatus", "whyItMatters"]
+      }
+    },
+    weakestBullets: {
+      type: "array",
+      description: "Resume bullets that should be improved for the target role.",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          originalBullet: { type: "string" },
+          issue: { type: "string" },
+          targetKeywords: {
+            type: "array",
+            items: { type: "string" }
+          },
+          rewrittenBullet: { type: "string" }
+        },
+        required: ["originalBullet", "issue", "targetKeywords", "rewrittenBullet"]
+      }
+    },
+    topFixes: {
+      type: "array",
+      description: "Short practical fixes to improve ATS keyword alignment.",
+      items: { type: "string" }
+    }
+  },
+  required: ["jobKeywords", "weakestBullets", "topFixes"]
+};
+
+export const analysisSchema = roleMatchSchema;

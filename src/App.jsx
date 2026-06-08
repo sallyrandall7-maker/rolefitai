@@ -12,22 +12,46 @@ import { sampleJobDescription, sampleResume } from "./sampleData.js";
 const API_URL = import.meta.env.PROD
   ? "/api/analyse"
   : "http://127.0.0.1:8787/api/analyse";
-const loadingSteps = [
-  "Reading the resume",
-  "Scanning the job description",
-  "Comparing role keywords",
-  "Checking ATS match",
-  "Preparing suggestions",
-  "Drafting interview questions"
+const analysisTabs = [
+  {
+    id: "roleMatch",
+    label: "Role Match",
+    emptyTitle: "Role match results will appear here",
+    emptyText: "Run a role fit analysis to see scores, gaps, risks, and questions.",
+    loadingSteps: [
+      "Reading the resume",
+      "Scanning the job description",
+      "Comparing role keywords",
+      "Checking ATS match",
+      "Preparing suggestions",
+      "Drafting interview questions"
+    ]
+  },
+  {
+    id: "bulletOptimiser",
+    label: "ATS Bullet Optimiser",
+    emptyTitle: "Bullet optimisation results will appear here",
+    emptyText: "Run the optimiser to find ATS keywords and improve weak bullets.",
+    loadingSteps: [
+      "Extracting job ad keywords",
+      "Checking resume keyword coverage",
+      "Finding weaker bullet points",
+      "Matching bullets to target keywords",
+      "Rewriting bullets truthfully",
+      "Preparing top fixes"
+    ]
+  }
 ];
 
 function App() {
   const [resume, setResume] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [analysis, setAnalysis] = useState(null);
+  const [activeTab, setActiveTab] = useState("roleMatch");
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [loadingStepIndex, setLoadingStepIndex] = useState(0);
   const [error, setError] = useState("");
+  const activeAnalysis = analysisTabs.find((tab) => tab.id === activeTab);
 
   useEffect(() => {
     if (!isAnalysing) {
@@ -37,12 +61,19 @@ function App() {
 
     const stepTimer = window.setInterval(() => {
       setLoadingStepIndex((currentIndex) =>
-        Math.min(currentIndex + 1, loadingSteps.length - 1)
+        Math.min(currentIndex + 1, activeAnalysis.loadingSteps.length - 1)
       );
     }, 1400);
 
     return () => window.clearInterval(stepTimer);
-  }, [isAnalysing]);
+  }, [activeAnalysis.loadingSteps.length, isAnalysing]);
+
+  function handleTabChange(tabId) {
+    setActiveTab(tabId);
+    setAnalysis(null);
+    setError("");
+    setLoadingStepIndex(0);
+  }
 
   async function handleAnalyse() {
     setError("");
@@ -58,7 +89,8 @@ function App() {
         },
         body: JSON.stringify({
           resume,
-          jobDescription
+          jobDescription,
+          analysisType: activeTab
         })
       });
 
@@ -126,6 +158,19 @@ function App() {
         </label>
       </section>
 
+      <div className="tabs" aria-label="Analysis modules">
+        {analysisTabs.map((tab) => (
+          <button
+            className={activeTab === tab.id ? "tab-button active" : "tab-button"}
+            key={tab.id}
+            onClick={() => handleTabChange(tab.id)}
+            type="button"
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <button className="analyse-button" onClick={handleAnalyse} disabled={isAnalysing}>
         <Sparkles size={18} aria-hidden="true" />
         {isAnalysing ? "Analysing..." : "Analyse"}
@@ -135,9 +180,14 @@ function App() {
 
       <section className="results" aria-label="Analysis results">
         {analysis ? (
-          <Results analysis={analysis} />
+          activeTab === "bulletOptimiser" ? (
+            <BulletOptimiserResults analysis={analysis} />
+          ) : (
+            <RoleMatchResults analysis={analysis} />
+          )
         ) : (
           <EmptyResults
+            activeAnalysis={activeAnalysis}
             isAnalysing={isAnalysing}
             loadingStepIndex={loadingStepIndex}
           />
@@ -147,21 +197,26 @@ function App() {
   );
 }
 
-function EmptyResults({ isAnalysing, loadingStepIndex }) {
+function EmptyResults({ activeAnalysis, isAnalysing, loadingStepIndex }) {
   if (isAnalysing) {
-    return <LoadingResults currentStepIndex={loadingStepIndex} />;
+    return (
+      <LoadingResults
+        currentStepIndex={loadingStepIndex}
+        loadingSteps={activeAnalysis.loadingSteps}
+      />
+    );
   }
 
   return (
     <div className="empty-state">
       <FileSearch size={34} aria-hidden="true" />
-      <h2>Results will appear here</h2>
-      <p>Paste both texts, then run a real AI-powered analysis.</p>
+      <h2>{activeAnalysis.emptyTitle}</h2>
+      <p>{activeAnalysis.emptyText}</p>
     </div>
   );
 }
 
-function LoadingResults({ currentStepIndex }) {
+function LoadingResults({ currentStepIndex, loadingSteps }) {
   return (
     <div className="loading-state" aria-live="polite">
       <div className="loading-header">
@@ -193,7 +248,7 @@ function LoadingResults({ currentStepIndex }) {
   );
 }
 
-function Results({ analysis }) {
+function RoleMatchResults({ analysis }) {
   return (
     <div className="results-grid">
       <ScoreCard title="Overall role match" score={analysis.overallMatchScore} />
@@ -224,6 +279,50 @@ function Results({ analysis }) {
       </ResultCard>
     </div>
   );
+}
+
+function BulletOptimiserResults({ analysis }) {
+  return (
+    <div className="results-grid">
+      <ResultCard title="Job ad keywords" wide>
+        <div className="keyword-table">
+          {analysis.jobKeywords.map((keyword) => (
+            <div className="keyword-row" key={keyword.keyword}>
+              <div>
+                <strong>{keyword.keyword}</strong>
+                <p>{keyword.whyItMatters}</p>
+              </div>
+              <span>{keyword.importance}</span>
+              <span className={getStatusClass(keyword.resumeStatus)}>
+                {keyword.resumeStatus}
+              </span>
+            </div>
+          ))}
+        </div>
+      </ResultCard>
+
+      <ResultCard title="Weakest bullets to improve" wide>
+        <div className="bullet-list">
+          {analysis.weakestBullets.map((bullet) => (
+            <article className="bullet-card" key={bullet.originalBullet}>
+              <p className="original-bullet">{bullet.originalBullet}</p>
+              <p>{bullet.issue}</p>
+              <KeywordList items={bullet.targetKeywords} />
+              <strong>{bullet.rewrittenBullet}</strong>
+            </article>
+          ))}
+        </div>
+      </ResultCard>
+
+      <ResultCard title="Top fixes" wide>
+        <IconList icon={<CheckCircle2 size={18} />} items={analysis.topFixes} />
+      </ResultCard>
+    </div>
+  );
+}
+
+function getStatusClass(status) {
+  return status === "Found" ? "status found" : status === "Weak" ? "status weak" : "status missing";
 }
 
 function ScoreCard({ title, score }) {

@@ -94,6 +94,37 @@ h1 {
   background: #e2f3ed;
 }
 
+.tabs {
+  display: inline-flex;
+  gap: 6px;
+  margin: 22px 0 0;
+  border: 1px solid #d4dfd9;
+  border-radius: 8px;
+  padding: 4px;
+  background: #ffffff;
+}
+
+.tab-button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 14px;
+  color: #536174;
+  background: transparent;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tab-button.active {
+  color: #ffffff;
+  background: #2f7d68;
+}
+
+.tab-button:hover:not(.active) {
+  color: #215b4c;
+  background: #eef8f4;
+}
+
 textarea {
   min-height: 260px;
   resize: vertical;
@@ -117,7 +148,7 @@ textarea:focus {
   justify-content: center;
   gap: 8px;
   min-height: 46px;
-  margin: 22px 0 26px;
+  margin: 18px 0 26px;
   border: 0;
   border-radius: 8px;
   padding: 0 22px;
@@ -350,6 +381,92 @@ textarea:focus {
   line-height: 1.5;
 }
 
+.keyword-table {
+  display: grid;
+  gap: 10px;
+}
+
+.keyword-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px 90px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e0e7e3;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8faf8;
+}
+
+.keyword-row strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #182235;
+}
+
+.keyword-row p {
+  margin-bottom: 0;
+  color: #536174;
+  font-size: 0.92rem;
+}
+
+.status,
+.keyword-row > span {
+  border-radius: 999px;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.keyword-row > span {
+  color: #536174;
+  background: #edf1ef;
+}
+
+.status.found {
+  color: #215b4c;
+  background: #dff4ec;
+}
+
+.status.weak {
+  color: #755400;
+  background: #fff2bf;
+}
+
+.status.missing {
+  color: #8a2424;
+  background: #ffe2e2;
+}
+
+.bullet-list {
+  display: grid;
+  gap: 12px;
+}
+
+.bullet-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #e0e7e3;
+  border-radius: 8px;
+  padding: 14px;
+  background: #f8faf8;
+}
+
+.bullet-card p,
+.bullet-card strong {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.bullet-card strong {
+  color: #215b4c;
+}
+
+.original-bullet {
+  color: #182235;
+  font-weight: 800;
+}
+
 @media (max-width: 760px) {
   .app-shell {
     width: min(100% - 24px, 1120px);
@@ -369,6 +486,16 @@ textarea:focus {
     align-items: flex-start;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .tabs {
+    display: grid;
+    width: 100%;
+  }
+
+  .keyword-row {
+    grid-template-columns: 1fr;
+    align-items: start;
   }
 
   textarea {

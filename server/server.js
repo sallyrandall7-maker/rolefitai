@@ -77,6 +77,7 @@ async function handleAnalyse(request, response) {
     const body = await readJsonBody(request);
     const resume = String(body.resume || "").trim();
     const jobDescription = String(body.jobDescription || "").trim();
+    const analysisType = String(body.analysisType || "roleMatch");
 
     if (!resume || !jobDescription) {
       sendJson(response, 400, {
@@ -95,7 +96,8 @@ async function handleAnalyse(request, response) {
     const analysis = await requestOpenAiAnalysis({
       apiKey,
       resume,
-      jobDescription
+      jobDescription,
+      analysisType
     });
 
     sendJson(response, 200, analysis);

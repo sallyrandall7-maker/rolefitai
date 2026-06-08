@@ -20,6 +20,7 @@ export default async function handler(request, response) {
 
     const resume = String(request.body?.resume || "").trim();
     const jobDescription = String(request.body?.jobDescription || "").trim();
+    const analysisType = String(request.body?.analysisType || "roleMatch");
 
     if (!resume || !jobDescription) {
       response.status(400).json({
@@ -38,7 +39,8 @@ export default async function handler(request, response) {
     const analysis = await requestOpenAiAnalysis({
       apiKey,
       resume,
-      jobDescription
+      jobDescription,
+      analysisType
     });
 
     response.status(200).json(analysis);
