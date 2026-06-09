@@ -285,6 +285,18 @@ function App() {
     setActiveStep("Fit Check");
   }
 
+  function handleNewResume() {
+    setResume("");
+    setFitAnalysis(null);
+    setBulletAnalysis(null);
+    setProfileAnalysis(null);
+    setContactNote(null);
+    setError("");
+    setUploadMessage("");
+    setLoadingStepIndex(0);
+    setActiveStep("Fit Check");
+  }
+
   return (
     <main className="app-shell">
       <section
@@ -313,6 +325,15 @@ function App() {
             Resume
             <span className="field-actions">
               <UploadButton onUpload={handleDocxUpload} />
+              <button
+                className="sample-button"
+                onClick={handleNewResume}
+                title="Clear resume and keep this job"
+                type="button"
+              >
+                <RotateCcw size={15} aria-hidden="true" />
+                New resume
+              </button>
               <button
                 className="sample-button"
                 onClick={() => setResume(sampleResume)}
