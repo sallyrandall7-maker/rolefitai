@@ -10,8 +10,11 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 button,
@@ -21,6 +24,7 @@ textarea {
 
 .app-shell {
   width: min(1120px, calc(100% - 32px));
+  max-width: 100%;
   margin: 0 auto;
   padding: 24px 0 48px;
 }
@@ -127,11 +131,13 @@ h1 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+  min-width: 0;
 }
 
 .field {
   display: grid;
   gap: 10px;
+  min-width: 0;
 }
 
 .field-heading {
@@ -182,6 +188,8 @@ h1 {
 }
 
 textarea {
+  width: 100%;
+  min-width: 0;
   min-height: 280px;
   resize: vertical;
   border: 1px solid #cdd6e2;
@@ -191,6 +199,25 @@ textarea {
   background: #ffffff;
   line-height: 1.5;
   outline: none;
+}
+
+.mini-field {
+  display: grid;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.mini-field span {
+  color: #9a3412;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.mini-field textarea {
+  min-height: 82px;
+  padding: 10px 12px;
+  font-size: 0.92rem;
 }
 
 textarea:focus {
@@ -254,6 +281,14 @@ textarea:focus {
 .analyse-button:disabled {
   background: #d8a06b;
   cursor: wait;
+}
+
+.analyse-button.secondary {
+  background: #7c2d12;
+}
+
+.analyse-button.secondary:hover {
+  background: #5f2410;
 }
 
 .error-message {
@@ -378,12 +413,16 @@ textarea:focus {
 .report {
   display: grid;
   gap: 16px;
+  min-width: 0;
 }
 
 .recruiter-scan,
-.optimiser-results {
+.recruiter-reasoning,
+.optimiser-results,
+.profile-results {
   display: grid;
   gap: 16px;
+  min-width: 0;
 }
 
 .recruiter-target {
@@ -397,11 +436,12 @@ textarea:focus {
   margin: 0;
   color: #111827;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .first-page-scan {
   display: grid;
-  grid-template-columns: 0.8fr 1.1fr 1.1fr;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.1fr) minmax(0, 1.1fr);
   gap: 14px;
 }
 
@@ -423,13 +463,42 @@ textarea:focus {
   gap: 12px;
   border-top: 1px solid #e2e8f0;
   padding-top: 14px;
+  min-width: 0;
+}
+
+.recruiter-decision.summary {
+  border-top: 0;
+  padding-top: 0;
 }
 
 .recruiter-decision p {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-.improve-panel {
+.detail-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 38px;
+  border: 1px solid #ead8c8;
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #9a3412;
+  background: #fffaf5;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.detail-toggle:hover {
+  background: #fff4e8;
+}
+
+.improve-panel,
+.submit-panel {
   display: grid;
   gap: 16px;
   border: 1px solid #f5c27e;
@@ -438,21 +507,59 @@ textarea:focus {
   background: #fff9f1;
 }
 
-.improve-panel-header {
+.improve-panel-header,
+.submit-panel-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 18px;
   align-items: center;
 }
 
-.improve-panel h2 {
+.improve-panel h2,
+.submit-panel h2 {
   margin-bottom: 8px;
   color: #111827;
   font-size: 1.15rem;
 }
 
-.improve-panel p:last-child {
+.improve-panel p:last-child,
+.submit-panel p:last-child {
   margin-bottom: 0;
+}
+
+.improve-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.improve-action-card {
+  display: grid;
+  gap: 16px;
+  align-content: space-between;
+  border: 1px solid #ead8c8;
+  border-radius: 8px;
+  padding: 16px;
+  background: #ffffff;
+}
+
+.improve-action-card h3 {
+  margin: 5px 0 8px;
+  color: #111827;
+  font-size: 1rem;
+}
+
+.improve-action-card p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.45;
+}
+
+.part-label {
+  color: #9a3412;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .next-action {
@@ -465,11 +572,22 @@ textarea:focus {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+  min-width: 0;
 }
 
 .score-card,
 .result-card {
+  min-width: 0;
+  overflow: hidden;
   padding: 20px;
+}
+
+.results-grid > *,
+.profile-summary > *,
+.profile-columns > *,
+.improve-actions > *,
+.first-page-scan > * {
+  min-width: 0;
 }
 
 .card-title-row {
@@ -518,6 +636,7 @@ textarea:focus {
 
 .wide {
   grid-column: 1 / -1;
+  min-width: 0;
 }
 
 .status-chip,
@@ -527,6 +646,9 @@ textarea:focus {
   justify-content: center;
   border-radius: 999px;
   font-weight: 800;
+}
+
+.status-chip {
   white-space: nowrap;
 }
 
@@ -555,14 +677,20 @@ textarea:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
 }
 
 .keyword-list span {
+  max-width: 100%;
   border: 1px solid #cdd6e2;
   padding: 7px 10px;
   color: #1f4fbf;
   background: #fff4e8;
   font-size: 0.9rem;
+  justify-content: flex-start;
+  overflow-wrap: anywhere;
+  text-align: left;
+  white-space: normal;
 }
 
 .icon-list {
@@ -579,6 +707,12 @@ textarea:focus {
   gap: 10px;
   color: #4b5563;
   line-height: 1.45;
+  min-width: 0;
+}
+
+.icon-list span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .icon-list svg {
@@ -599,6 +733,10 @@ textarea:focus {
   border-radius: 8px;
   padding: 12px;
   background: #fffaf5;
+}
+
+.keyword-row > div {
+  min-width: 0;
 }
 
 .keyword-row strong {
@@ -656,6 +794,12 @@ textarea:focus {
   background: #fffaf5;
 }
 
+.bullet-card > div,
+.bullet-card p {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .bullet-card p {
   margin: 0;
   color: #4b5563;
@@ -687,9 +831,128 @@ textarea:focus {
   font-size: 0.92rem;
 }
 
+.profile-summary,
+.profile-answers,
+.profile-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+.profile-summary,
+.profile-draft {
+  margin-bottom: 16px;
+}
+
+.profile-summary > div,
+.profile-answers > div,
+.profile-draft {
+  border: 1px solid #ead8c8;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fffaf5;
+}
+
+.profile-summary p,
+.profile-answers p,
+.profile-draft p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.profile-answers {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.profile-draft p {
+  color: #111827;
+  font-weight: 800;
+  white-space: pre-line;
+}
+
+.contact-note {
+  margin-bottom: 16px;
+  border: 1px solid #ead8c8;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fffaf5;
+}
+
+.contact-note p {
+  margin: 0;
+  color: #111827;
+  font-weight: 800;
+}
+
+.profile-columns {
+  margin-bottom: 16px;
+}
+
+.profile-columns h3,
+.profile-results h3 {
+  margin: 0 0 10px;
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.capability-table {
+  display: grid;
+  gap: 10px;
+}
+
+.capability-row {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  border: 1px solid #ead8c8;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fffaf5;
+}
+
+.capability-row > div {
+  min-width: 0;
+}
+
+.capability-row strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #111827;
+}
+
+.capability-row p {
+  margin-bottom: 4px;
+  color: #146c43;
+  font-weight: 800;
+}
+
+.capability-row small {
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.status.keep,
+.status.add {
+  color: #146c43;
+  background: #dff4e8;
+}
+
+.status.reword {
+  color: #6b5200;
+  background: #fff1bd;
+}
+
+.status.remove {
+  color: #8a2424;
+  background: #ffe2e2;
+}
+
 @media (max-width: 760px) {
   .app-shell {
-    width: min(100% - 24px, 1120px);
+    width: calc(100% - 24px);
     padding-top: 16px;
   }
 
@@ -707,7 +970,12 @@ textarea:focus {
   .action-panel,
   .next-action,
   .improve-panel-header,
+  .submit-panel-header,
+  .improve-actions,
   .first-page-scan,
+  .profile-summary,
+  .profile-answers,
+  .profile-columns,
   .results-grid,
   .loading-steps {
     grid-template-columns: 1fr;
@@ -715,6 +983,8 @@ textarea:focus {
 
   .analyse-button {
     width: 100%;
+    min-width: 0;
+    padding-inline: 14px;
   }
 
   .field-heading {
@@ -735,6 +1005,12 @@ textarea:focus {
 
   .status-chip {
     width: fit-content;
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .detail-toggle {
+    width: 100%;
   }
 
   textarea {
@@ -742,6 +1018,7 @@ textarea:focus {
   }
 
   .keyword-row,
+  .capability-row,
   .recruiter-decision {
     grid-template-columns: 1fr;
     align-items: start;

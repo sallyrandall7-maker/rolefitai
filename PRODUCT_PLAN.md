@@ -203,6 +203,9 @@ Rules:
 
 - Use strong action verbs.
 - Use outcome-focused language.
+- Rewritten bullets should usually follow: Deliver/Own/Lead X by Y, enabling/resulting in Z.
+- Every rewritten bullet must make the "so what" clear: business value, customer impact, risk reduction, delivery confidence, operational improvement, or stakeholder benefit.
+- Paste-ready bullets should avoid dash punctuation because it sounds too AI-generated.
 - Include business impact where supported.
 - Include relevant job keywords only where truthful.
 - Quantify achievements only where evidence exists.
@@ -428,12 +431,12 @@ The user sees:
 
 The app offers focused next actions:
 
-- Generate Executive Profile
-- Optimise Resume Bullets
+- Part 1: Optimise Bullet Points / Keywords
+- Part 2: Optimise Profile + Key Capabilities
 
 The user can copy improved sections into their resume.
 
-The Resume Bullet Optimiser should show:
+Part 1, Resume Bullet Optimiser, should show:
 
 - Job ad keyword
 - Resume status: Found, Weak, or Missing
@@ -447,6 +450,26 @@ This step should answer:
 
 ```text
 What exact resume text should I change before I apply?
+```
+
+Part 2, Profile + Key Capabilities Optimiser, should show:
+
+- Recruiter target summary from the job ad
+- Current top-section read
+- Paste-ready profile/about me paragraph that integrates: Why me, what problem I solve for the employer, and my motivation
+- Paste-ready profile/about me should avoid dash punctuation because it sounds too AI-generated.
+- Supporting explanation fields showing how the paragraph answers: Why me, problem I solve, and motivation
+- Why the improved profile works
+- Key capabilities to keep, add, reword, or remove
+- Top-section gaps that should show faster
+- Truthfulness note
+- Optional user motivation note, used only when supplied
+- Precise experience-duration wording. For example, do not turn "16+ years in technology delivery across various roles" into "16+ years in platform ownership" unless the resume clearly supports that exact scope.
+
+This step should answer:
+
+```text
+Does the top of my resume quickly say the same thing the recruiter is looking for?
 ```
 
 ### Step 4: Re-Review
@@ -468,11 +491,26 @@ The user sees:
 
 ### Step 5: Submit
 
-The app can later generate:
+The app can generate:
+
+- Short hiring team contact note for LinkedIn when the user can see someone on the hiring team
+
+The short contact note should:
+
+- Say the user has applied
+- Include a brief why-me line based on the resume and job ad
+- Include why the user would love the role or team
+- Thank them for considering the application
+- Avoid forcing action or asking for a referral, call, meeting, or response
+- Be short enough for a LinkedIn message
+- Use a human tone
+- Avoid dash punctuation
+
+Later the app can also generate:
 
 - Cover letter
 - Short email
-- Recruiter message
+- Recruiter message variants
 
 ### Step 6: Prepare For Interview
 

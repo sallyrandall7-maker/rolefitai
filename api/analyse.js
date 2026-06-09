@@ -20,6 +20,7 @@ export default async function handler(request, response) {
 
     const resume = String(request.body?.resume || "").trim();
     const jobDescription = String(request.body?.jobDescription || "").trim();
+    const motivationNote = String(request.body?.motivationNote || "").trim();
     const analysisType = String(request.body?.analysisType || "roleMatch");
 
     if (!resume || !jobDescription) {
@@ -40,6 +41,7 @@ export default async function handler(request, response) {
       apiKey,
       resume,
       jobDescription,
+      motivationNote,
       analysisType
     });
 

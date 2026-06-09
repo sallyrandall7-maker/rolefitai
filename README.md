@@ -12,8 +12,14 @@ resume and job description into a practical Apply Today workflow.
 - The local server safely calls the OpenAI API using the key in `.env`.
 - Includes a **Fit Check** for application readiness, ATS match, missing areas,
   and a job-ad-specific recruiter 8-second scan.
-- Includes an **Improve Resume** path for job ad keywords, weak resume bullets,
-  truthful rewritten bullets, and top fixes.
+- Includes an **Improve Resume** path split into bullet/keyword optimisation
+  and profile/key capabilities optimisation.
+- Bullet rewrites use a clear what/how/so-what structure, such as
+  `Delivered X by Y, resulting in Z`, while staying truthful.
+- Profile optimisation can use an optional motivation note to make the
+  About Me/Profile section more personal.
+- Includes a short hiring team contact note for LinkedIn after applying,
+  written in a human tone without pushy action requests.
 
 ## How To Run It
 
@@ -159,6 +165,7 @@ The prompts tell the AI to compare the resume and job description across:
 - missing or weak keywords
 - resume improvements
 - truthful bullet rewrites
+- profile/about me and key capability rewrites
 
 ### `server/analysisSchema.js`
 
@@ -172,6 +179,8 @@ like:
 - `recruiterScan`
 - `missingOrWeakKeywords`
 - `weakestBullets`
+- `improvedProfile`
+- `keyCapabilities`
 
 ### `src/main.jsx`
 

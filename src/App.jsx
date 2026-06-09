@@ -3,6 +3,8 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   FileSearch,
   ListChecks,
   Search,
@@ -31,22 +33,50 @@ const optimiserLoadingSteps = [
   "Rewriting bullets truthfully",
   "Preparing top fixes"
 ];
+const profileLoadingSteps = [
+  "Reading the top of the resume",
+  "Matching the recruiter target",
+  "Drafting a sharper profile",
+  "Reviewing key capabilities",
+  "Preparing first-page fixes"
+];
+const contactNoteLoadingSteps = [
+  "Reading the role context",
+  "Finding the why-me angle",
+  "Writing a short human note",
+  "Checking tone and length"
+];
 
 function App() {
   const [resume, setResume] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [fitAnalysis, setFitAnalysis] = useState(null);
   const [bulletAnalysis, setBulletAnalysis] = useState(null);
+  const [profileAnalysis, setProfileAnalysis] = useState(null);
+  const [contactNote, setContactNote] = useState(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [isOptimising, setIsOptimising] = useState(false);
+  const [isOptimisingProfile, setIsOptimisingProfile] = useState(false);
+  const [isGeneratingContactNote, setIsGeneratingContactNote] = useState(false);
   const [loadingStepIndex, setLoadingStepIndex] = useState(0);
   const [error, setError] = useState("");
   const [uploadMessage, setUploadMessage] = useState("");
-  const currentStep = bulletAnalysis || isOptimising ? "Improve Resume" : "Fit Check";
-  const activeLoadingSteps = isOptimising ? optimiserLoadingSteps : loadingSteps;
+  const [motivationNote, setMotivationNote] = useState("");
+  const currentStep = contactNote || isGeneratingContactNote
+    ? "Submit"
+    : bulletAnalysis || profileAnalysis || isOptimising || isOptimisingProfile
+      ? "Improve Resume"
+      : "Fit Check";
+  const activeLoadingSteps = isGeneratingContactNote
+    ? contactNoteLoadingSteps
+    : isOptimisingProfile
+    ? profileLoadingSteps
+    : isOptimising
+      ? optimiserLoadingSteps
+      : loadingSteps;
 
   useEffect(() => {
-    if (!isAnalysing && !isOptimising) {
+    if (!isAnalysing && !isOptimising && !isOptimisingProfile && !isGeneratingContactNote) {
       setLoadingStepIndex(0);
       return undefined;
     }
@@ -58,7 +88,13 @@ function App() {
     }, 1400);
 
     return () => window.clearInterval(stepTimer);
-  }, [activeLoadingSteps.length, isAnalysing, isOptimising]);
+  }, [
+    activeLoadingSteps.length,
+    isAnalysing,
+    isOptimising,
+    isOptimisingProfile,
+    isGeneratingContactNote
+  ]);
 
   async function handleDocxUpload(event) {
     const file = event.target.files?.[0];
@@ -89,6 +125,8 @@ function App() {
     setError("");
     setFitAnalysis(null);
     setBulletAnalysis(null);
+    setProfileAnalysis(null);
+    setContactNote(null);
     setLoadingStepIndex(0);
     setIsAnalysing(true);
 
@@ -108,13 +146,13 @@ function App() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "The Fit Check request failed.");
+        throw new Error(data.details || data.error || "The Fit Check request failed.");
       }
 
       setFitAnalysis(data);
     } catch (requestError) {
       setFitAnalysis(null);
-      setError(requestError.message);
+      setError(getFriendlyRequestError(requestError));
     } finally {
       setIsAnalysing(false);
     }
@@ -142,15 +180,85 @@ function App() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "The bullet optimiser request failed.");
+        throw new Error(data.details || data.error || "The bullet optimiser request failed.");
       }
 
       setBulletAnalysis(data);
     } catch (requestError) {
       setBulletAnalysis(null);
-      setError(requestError.message);
+      setError(getFriendlyRequestError(requestError));
     } finally {
       setIsOptimising(false);
+    }
+  }
+
+  async function handleProfileOptimiser() {
+    setError("");
+    setProfileAnalysis(null);
+    setLoadingStepIndex(0);
+    setIsOptimisingProfile(true);
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          resume,
+          jobDescription,
+          motivationNote,
+          analysisType: "profileOptimiser"
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.details || data.error || "The profile optimiser request failed.");
+      }
+
+      setProfileAnalysis(data);
+    } catch (requestError) {
+      setProfileAnalysis(null);
+      setError(getFriendlyRequestError(requestError));
+    } finally {
+      setIsOptimisingProfile(false);
+    }
+  }
+
+  async function handleContactNote() {
+    setError("");
+    setContactNote(null);
+    setLoadingStepIndex(0);
+    setIsGeneratingContactNote(true);
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          resume,
+          jobDescription,
+          motivationNote,
+          analysisType: "contactNote"
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.details || data.error || "The contact note request failed.");
+      }
+
+      setContactNote(data);
+    } catch (requestError) {
+      setContactNote(null);
+      setError(getFriendlyRequestError(requestError));
+    } finally {
+      setIsGeneratingContactNote(false);
     }
   }
 
@@ -232,7 +340,19 @@ function App() {
       {error ? <p className="error-message">{error}</p> : null}
 
       <section className="results" aria-label="Apply Today results">
-        {isOptimising ? (
+        {isGeneratingContactNote ? (
+          <LoadingResults
+            currentStepIndex={loadingStepIndex}
+            loadingSteps={contactNoteLoadingSteps}
+            title="Writing contact note"
+          />
+        ) : isOptimisingProfile ? (
+          <LoadingResults
+            currentStepIndex={loadingStepIndex}
+            loadingSteps={profileLoadingSteps}
+            title="Optimising profile and key capabilities"
+          />
+        ) : isOptimising ? (
           <LoadingResults
             currentStepIndex={loadingStepIndex}
             loadingSteps={optimiserLoadingSteps}
@@ -242,8 +362,16 @@ function App() {
           <FitCheckResults
             analysis={fitAnalysis}
             bulletAnalysis={bulletAnalysis}
+            profileAnalysis={profileAnalysis}
+            contactNote={contactNote}
             isOptimising={isOptimising}
+            isOptimisingProfile={isOptimisingProfile}
+            isGeneratingContactNote={isGeneratingContactNote}
             onOptimiseBullets={handleBulletOptimiser}
+            onOptimiseProfile={handleProfileOptimiser}
+            onGenerateContactNote={handleContactNote}
+            motivationNote={motivationNote}
+            onMotivationNoteChange={setMotivationNote}
           />
         ) : (
           <EmptyResults isAnalysing={isAnalysing} loadingStepIndex={loadingStepIndex} />
@@ -329,8 +457,22 @@ function LoadingResults({ currentStepIndex, loadingSteps, title = "Running Fit C
   );
 }
 
-function FitCheckResults({ analysis, bulletAnalysis, isOptimising, onOptimiseBullets }) {
+function FitCheckResults({
+  analysis,
+  bulletAnalysis,
+  profileAnalysis,
+  contactNote,
+  isOptimising,
+  isOptimisingProfile,
+  isGeneratingContactNote,
+  onOptimiseBullets,
+  onOptimiseProfile,
+  onGenerateContactNote,
+  motivationNote,
+  onMotivationNoteChange
+}) {
   const readiness = getReadiness(analysis);
+  const recruiterScan = normaliseRecruiterScan(analysis.recruiterScan);
 
   return (
     <div className="report">
@@ -346,113 +488,313 @@ function FitCheckResults({ analysis, bulletAnalysis, isOptimising, onOptimiseBul
       <div className="results-grid">
         <ScoreCard
           title="Application Readiness"
-          score={analysis.overallMatchScore}
+          score={normaliseScore(analysis.overallMatchScore)}
           status={readiness.label}
         />
-        <ScoreCard title="ATS Match" score={analysis.atsKeywordMatch} status={getScoreLabel(analysis.atsKeywordMatch)} />
+        <ScoreCard title="ATS Match" score={normaliseScore(analysis.atsKeywordMatch)} status={getScoreLabel(analysis.atsKeywordMatch)} />
 
         <ResultCard title="Recruiter 8-Second Scan" wide>
-          <RecruiterScan scan={analysis.recruiterScan} />
+          <RecruiterScan scan={recruiterScan} />
         </ResultCard>
 
         <ResultCard title="Top Matching Areas">
           <IconList
             icon={<CheckCircle2 size={18} />}
-            items={analysis.topMatchingAreas}
+            items={safeList(analysis.topMatchingAreas)}
           />
         </ResultCard>
 
         <ResultCard title="Top Missing Areas">
-          <KeywordList items={analysis.missingOrWeakKeywords} />
+          <KeywordList items={safeList(analysis.missingOrWeakKeywords)} />
         </ResultCard>
 
         <ResultCard title="Recommended Fixes" wide>
           <IconList
             icon={<AlertTriangle size={18} />}
-            items={analysis.resumeSuggestions}
+            items={safeList(analysis.resumeSuggestions)}
           />
         </ResultCard>
       </div>
 
       <ImproveResumePanel
         bulletAnalysis={bulletAnalysis}
+        profileAnalysis={profileAnalysis}
         isOptimising={isOptimising}
+        isOptimisingProfile={isOptimisingProfile}
         onOptimiseBullets={onOptimiseBullets}
+        onOptimiseProfile={onOptimiseProfile}
+        motivationNote={motivationNote}
+        onMotivationNoteChange={onMotivationNoteChange}
+      />
+
+      <SubmitPanel
+        contactNote={contactNote}
+        isGeneratingContactNote={isGeneratingContactNote}
+        onGenerateContactNote={onGenerateContactNote}
       />
     </div>
   );
 }
 
 function RecruiterScan({ scan }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <div className="recruiter-scan">
       <div className="recruiter-target">
         <span className="bullet-label">Recruiter target</span>
         <p>{scan.recruiterTargetSummary}</p>
       </div>
-      <div>
-        <h3>What the recruiter is looking for</h3>
-        <IconList icon={<Search size={18} />} items={scan.whatRecruiterIsLookingFor} />
-      </div>
-      <div>
-        <h3>What the recruiter sees in your resume</h3>
-        <IconList icon={<FileSearch size={18} />} items={scan.whatRecruiterSees} />
-      </div>
-      <div className="first-page-scan">
-        <div>
-          <h3>First 5 seconds: attention gate</h3>
-          <span className={`status-chip ${getAttentionGateClass(scan.attentionGate)}`}>
-            {scan.attentionGate}
-          </span>
-        </div>
-        <div>
-          <h3>Visible on the first page</h3>
-          <IconList icon={<CheckCircle2 size={18} />} items={scan.firstPageAlignment} />
-        </div>
-        <div>
-          <h3>Needs to show faster</h3>
-          <IconList icon={<AlertTriangle size={18} />} items={scan.firstPageGaps} />
-        </div>
-      </div>
-      <div>
-        <h3>Next 5 seconds: proof that jumps out</h3>
-        <IconList icon={<ListChecks size={18} />} items={scan.supportingEvidence} />
-      </div>
-      <div className="recruiter-decision">
+
+      <div className="recruiter-decision summary">
         <span className={`status-chip ${getDecisionStatusClass(scan.decision)}`}>
           {scan.decision}
         </span>
         <p>{scan.reason}</p>
       </div>
+
+      <button
+        className="detail-toggle"
+        onClick={() => setIsExpanded((current) => !current)}
+        type="button"
+      >
+        {isExpanded ? <ChevronUp size={18} aria-hidden="true" /> : <ChevronDown size={18} aria-hidden="true" />}
+        {isExpanded ? "Hide recruiter reasoning" : "Show recruiter reasoning"}
+      </button>
+
+      {isExpanded ? (
+        <div className="recruiter-reasoning">
+          <div>
+            <h3>What the recruiter is looking for</h3>
+            <IconList icon={<Search size={18} />} items={scan.whatRecruiterIsLookingFor} />
+          </div>
+          <div>
+            <h3>What the recruiter sees in your resume</h3>
+            <IconList icon={<FileSearch size={18} />} items={scan.whatRecruiterSees} />
+          </div>
+          <div className="first-page-scan">
+            <div>
+              <h3>First 5 seconds: attention gate</h3>
+              <span className={`status-chip ${getAttentionGateClass(scan.attentionGate)}`}>
+                {scan.attentionGate}
+              </span>
+            </div>
+            <div>
+              <h3>Visible on the first page</h3>
+              <IconList icon={<CheckCircle2 size={18} />} items={scan.firstPageAlignment} />
+            </div>
+            <div>
+              <h3>Needs to show faster</h3>
+              <IconList icon={<AlertTriangle size={18} />} items={scan.firstPageGaps} />
+            </div>
+          </div>
+          <div>
+            <h3>Next 5 seconds: proof that jumps out</h3>
+            <IconList icon={<ListChecks size={18} />} items={scan.supportingEvidence} />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function ImproveResumePanel({ bulletAnalysis, isOptimising, onOptimiseBullets }) {
+function ImproveResumePanel({
+  bulletAnalysis,
+  profileAnalysis,
+  isOptimising,
+  isOptimisingProfile,
+  onOptimiseBullets,
+  onOptimiseProfile,
+  motivationNote,
+  onMotivationNoteChange
+}) {
   return (
     <section className="improve-panel" aria-label="Improve Resume">
-      <div className="improve-panel-header">
+      <div>
+        <p className="panel-label">Next step</p>
+        <h2>Improve Resume</h2>
+        <p>
+          Strengthen the first-page positioning and the detailed bullet evidence
+          before submitting.
+        </p>
+      </div>
+
+      <div className="improve-actions">
+        <article className="improve-action-card">
+          <div>
+            <span className="part-label">Part 1</span>
+            <h3>Optimise Bullet Points / Keywords</h3>
+            <p>
+              Find job ad keywords, weak bullets, and truthful as-is/to-be
+              rewrites.
+            </p>
+          </div>
+          <button
+            className="analyse-button"
+            disabled={isOptimising}
+            onClick={onOptimiseBullets}
+            type="button"
+          >
+            <ArrowRight size={18} aria-hidden="true" />
+            {bulletAnalysis ? "Re-run Bullet Optimiser" : "Optimise Bullets"}
+          </button>
+        </article>
+
+        <article className="improve-action-card">
+          <div>
+            <span className="part-label">Part 2</span>
+            <h3>Optimise Profile + Key Capabilities</h3>
+            <p>
+              Make the top of the resume mirror the recruiter target in the
+              first 5 seconds.
+            </p>
+            <label className="mini-field">
+              <span>Optional motivation note</span>
+              <textarea
+                value={motivationNote || ""}
+                onChange={(event) => onMotivationNoteChange?.(event.target.value)}
+                placeholder="Example: I am interested in this role because..."
+              />
+            </label>
+          </div>
+          <button
+            className="analyse-button secondary"
+            disabled={isOptimisingProfile}
+            onClick={onOptimiseProfile}
+            type="button"
+          >
+            <ArrowRight size={18} aria-hidden="true" />
+            {profileAnalysis ? "Re-run Profile Optimiser" : "Optimise Profile"}
+          </button>
+        </article>
+      </div>
+
+      {profileAnalysis ? <ProfileOptimiserResults analysis={profileAnalysis} /> : null}
+      {bulletAnalysis ? <BulletOptimiserResults analysis={bulletAnalysis} /> : null}
+    </section>
+  );
+}
+
+function ProfileOptimiserResults({ analysis }) {
+  return (
+    <div className="profile-results">
+      <ResultCard title="Profile + Key Capabilities Optimiser" wide>
+        <div className="profile-summary">
+          <div>
+            <span className="bullet-label">Recruiter target</span>
+            <p>{analysis.recruiterTargetSummary}</p>
+          </div>
+          <div>
+            <span className="bullet-label">Current top section read</span>
+            <p>{analysis.currentTopSectionRead}</p>
+          </div>
+        </div>
+
+        <div className="profile-draft">
+          <span className="bullet-label">Paste-ready profile/about me</span>
+          <p>{analysis.improvedProfile}</p>
+        </div>
+
+        <div className="profile-answers">
+          <div>
+            <span className="bullet-label">How it answers: why me</span>
+            <p>{analysis.whyMe}</p>
+          </div>
+          <div>
+            <span className="bullet-label">How it answers: problem I solve</span>
+            <p>{analysis.problemToSolve}</p>
+          </div>
+          <div>
+            <span className="bullet-label">How it answers: motivation</span>
+            <p>{analysis.motivation}</p>
+          </div>
+        </div>
+
+        <div className="profile-columns">
+          <div>
+            <h3>Why this works</h3>
+            <IconList icon={<CheckCircle2 size={18} />} items={analysis.whyThisProfileWorks} />
+          </div>
+          <div>
+            <h3>Top section gaps</h3>
+            <IconList icon={<AlertTriangle size={18} />} items={analysis.topSectionGaps} />
+          </div>
+        </div>
+
         <div>
-          <p className="panel-label">Next step</p>
-          <h2>Improve Resume</h2>
+          <h3>Key capabilities</h3>
+          <div className="capability-table">
+            {analysis.keyCapabilities.map((capability) => (
+              <div className="capability-row" key={`${capability.action}-${capability.capability}`}>
+                <span className={`status ${getCapabilityActionClass(capability.action)}`}>
+                  {capability.action}
+                </span>
+                <div>
+                  <strong>{capability.capability}</strong>
+                  <p>{capability.suggestedWording}</p>
+                  <small>{capability.reason}</small>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="truth-note">{analysis.truthfulnessNote}</p>
+      </ResultCard>
+    </div>
+  );
+}
+
+function SubmitPanel({ contactNote, isGeneratingContactNote, onGenerateContactNote }) {
+  return (
+    <section className="submit-panel" aria-label="Submit and follow up">
+      <div className="submit-panel-header">
+        <div>
+          <p className="panel-label">Submit</p>
+          <h2>Short Hiring Team Contact Note</h2>
           <p>
-            Use the job ad keywords to strengthen weaker resume bullets before
-            submitting.
+            Use this when you can see someone on the hiring team and want to
+            gently mention that you have applied.
           </p>
         </div>
         <button
           className="analyse-button"
-          disabled={isOptimising}
-          onClick={onOptimiseBullets}
+          disabled={isGeneratingContactNote}
+          onClick={onGenerateContactNote}
           type="button"
         >
           <ArrowRight size={18} aria-hidden="true" />
-          {bulletAnalysis ? "Re-run Bullet Optimiser" : "Optimise Resume Bullets"}
+          {contactNote ? "Re-run Contact Note" : "Generate Contact Note"}
         </button>
       </div>
 
-      {bulletAnalysis ? <BulletOptimiserResults analysis={bulletAnalysis} /> : null}
+      {contactNote ? <ContactNoteResults note={contactNote} /> : null}
     </section>
+  );
+}
+
+function ContactNoteResults({ note }) {
+  return (
+    <ResultCard title="Paste-ready LinkedIn note" wide>
+      <div className="contact-note">
+        <p>{note.shortNote}</p>
+      </div>
+
+      <div className="profile-answers">
+        <div>
+          <span className="bullet-label">Why me</span>
+          <p>{note.whyMeLine}</p>
+        </div>
+        <div>
+          <span className="bullet-label">Why them</span>
+          <p>{note.whyThemLine}</p>
+        </div>
+        <div>
+          <span className="bullet-label">Tone check</span>
+          <p>{note.toneCheck}</p>
+        </div>
+      </div>
+    </ResultCard>
   );
 }
 
@@ -504,7 +846,10 @@ function BulletOptimiserResults({ analysis }) {
 }
 
 function getReadiness(analysis) {
-  const lowestScore = Math.min(analysis.overallMatchScore, analysis.atsKeywordMatch);
+  const lowestScore = Math.min(
+    normaliseScore(analysis.overallMatchScore),
+    normaliseScore(analysis.atsKeywordMatch)
+  );
 
   if (lowestScore >= 78) {
     return {
@@ -533,12 +878,15 @@ function getReadiness(analysis) {
 }
 
 function getScoreLabel(score) {
-  if (score >= 78) return "Strong";
-  if (score >= 58) return "Needs work";
+  const normalisedScore = normaliseScore(score);
+  if (normalisedScore >= 78) return "Strong";
+  if (normalisedScore >= 58) return "Needs work";
   return "Risk";
 }
 
 function ScoreCard({ title, score, status }) {
+  const normalisedScore = normaliseScore(score);
+
   return (
     <article className="score-card">
       <div className="card-title-row">
@@ -546,9 +894,9 @@ function ScoreCard({ title, score, status }) {
         <span className={`status-chip ${getStatusClass(status)}`}>{status}</span>
       </div>
       <div className="score-row">
-        <strong>{score}%</strong>
+        <strong>{normalisedScore}%</strong>
         <div className="score-track" aria-hidden="true">
-          <span style={{ width: `${score}%` }} />
+          <span style={{ width: `${normalisedScore}%` }} />
         </div>
       </div>
     </article>
@@ -565,9 +913,11 @@ function ResultCard({ title, children, wide = false }) {
 }
 
 function KeywordList({ items }) {
+  const safeItems = safeList(items);
+
   return (
     <div className="keyword-list">
-      {items.map((keyword) => (
+      {safeItems.map((keyword) => (
         <span key={keyword}>{keyword}</span>
       ))}
     </div>
@@ -575,9 +925,11 @@ function KeywordList({ items }) {
 }
 
 function IconList({ icon, items }) {
+  const safeItems = safeList(items);
+
   return (
     <ul className="icon-list">
-      {items.map((item) => (
+      {safeItems.map((item) => (
         <li key={item}>
           {icon}
           <span>{item}</span>
@@ -585,6 +937,45 @@ function IconList({ icon, items }) {
       ))}
     </ul>
   );
+}
+
+function safeList(items) {
+  return Array.isArray(items) ? items.filter(Boolean) : [];
+}
+
+function normaliseScore(score) {
+  const numericScore = Number(score);
+
+  if (!Number.isFinite(numericScore)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(numericScore)));
+}
+
+function normaliseRecruiterScan(scan = {}) {
+  return {
+    recruiterTargetSummary:
+      scan.recruiterTargetSummary || "Recruiter target was not returned. Re-run Fit Check.",
+    whatRecruiterIsLookingFor: safeList(scan.whatRecruiterIsLookingFor),
+    whatRecruiterSees: safeList(scan.whatRecruiterSees),
+    firstPageAlignment: safeList(scan.firstPageAlignment),
+    firstPageGaps: safeList(scan.firstPageGaps),
+    attentionGate: scan.attentionGate || "Partial",
+    supportingEvidence: safeList(scan.supportingEvidence),
+    decision: scan.decision || "Maybe",
+    reason: scan.reason || "The scan did not return a complete decision reason."
+  };
+}
+
+function getFriendlyRequestError(error) {
+  const message = error?.message || "";
+
+  if (message === "Failed to fetch") {
+    return "Could not reach the local analysis server. Please make sure the app was started with npm.cmd run dev, not only the website preview.";
+  }
+
+  return message || "Something went wrong while running the analysis.";
 }
 
 function getStatusClass(status) {
@@ -609,6 +1000,13 @@ function getAttentionGateClass(gate) {
   if (gate === "Passes") return "strong";
   if (gate === "Partial") return "needs-work";
   return "risk";
+}
+
+function getCapabilityActionClass(action) {
+  if (action === "Keep") return "keep";
+  if (action === "Add") return "add";
+  if (action === "Reword") return "reword";
+  return "remove";
 }
 
 function getKeywordStatusClass(status) {

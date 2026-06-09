@@ -77,6 +77,7 @@ async function handleAnalyse(request, response) {
     const body = await readJsonBody(request);
     const resume = String(body.resume || "").trim();
     const jobDescription = String(body.jobDescription || "").trim();
+    const motivationNote = String(body.motivationNote || "").trim();
     const analysisType = String(body.analysisType || "roleMatch");
 
     if (!resume || !jobDescription) {
@@ -97,6 +98,7 @@ async function handleAnalyse(request, response) {
       apiKey,
       resume,
       jobDescription,
+      motivationNote,
       analysisType
     });
 
@@ -104,7 +106,8 @@ async function handleAnalyse(request, response) {
   } catch (error) {
     console.error(error);
     sendJson(response, 500, {
-      error: "Something went wrong while analysing the resume."
+      error: "Something went wrong while analysing the resume.",
+      details: error.message
     });
   }
 }

@@ -167,4 +167,103 @@ export const bulletOptimiserSchema = {
   required: ["jobKeywords", "weakestBullets", "topFixes"]
 };
 
+export const profileOptimiserSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    recruiterTargetSummary: {
+      type: "string",
+      description: "One sentence summarising what the recruiter is looking for in this job ad."
+    },
+    currentTopSectionRead: {
+      type: "string",
+      description: "How the resume's top profile/key capabilities currently reads against the recruiter target."
+    },
+    improvedProfile: {
+      type: "string",
+      description: "A truthful paste-ready profile/about me paragraph that integrates why me, problem solved, and motivation."
+    },
+    whyMe: {
+      type: "string",
+      description: "Why the candidate fits this role based on their supplied background."
+    },
+    problemToSolve: {
+      type: "string",
+      description: "The problem the candidate can help solve for this employer based on the job ad."
+    },
+    motivation: {
+      type: "string",
+      description: "A truthful motivation line, using the user's supplied motivation when provided."
+    },
+    whyThisProfileWorks: {
+      type: "array",
+      items: { type: "string" },
+      description: "Reasons the improved profile better matches the job ad and first-page recruiter scan."
+    },
+    keyCapabilities: {
+      type: "array",
+      description: "Recommended key capabilities for the top of the resume.",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          capability: { type: "string" },
+          action: {
+            type: "string",
+            enum: ["Keep", "Add", "Reword", "Remove"]
+          },
+          suggestedWording: { type: "string" },
+          reason: { type: "string" }
+        },
+        required: ["capability", "action", "suggestedWording", "reason"]
+      }
+    },
+    topSectionGaps: {
+      type: "array",
+      items: { type: "string" },
+      description: "Important job-ad signals that should show faster in the profile or key capabilities."
+    },
+    truthfulnessNote: {
+      type: "string",
+      description: "Reminder about what is supported and what the user should verify."
+    }
+  },
+  required: [
+    "recruiterTargetSummary",
+    "currentTopSectionRead",
+    "improvedProfile",
+    "whyMe",
+    "problemToSolve",
+    "motivation",
+    "whyThisProfileWorks",
+    "keyCapabilities",
+    "topSectionGaps",
+    "truthfulnessNote"
+  ]
+};
+
+export const contactNoteSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    shortNote: {
+      type: "string",
+      description: "A short human LinkedIn message to someone on the hiring team."
+    },
+    whyMeLine: {
+      type: "string",
+      description: "The concise why-me reasoning used in the note."
+    },
+    whyThemLine: {
+      type: "string",
+      description: "The concise why-this-company-or-role reasoning used in the note."
+    },
+    toneCheck: {
+      type: "string",
+      description: "Short confirmation that the message is warm, not pushy, and suitable for LinkedIn."
+    }
+  },
+  required: ["shortNote", "whyMeLine", "whyThemLine", "toneCheck"]
+};
+
 export const analysisSchema = roleMatchSchema;

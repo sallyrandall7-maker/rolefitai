@@ -1,9 +1,16 @@
 import {
   bulletOptimiserInstructions,
   buildAnalysisInput,
+  contactNoteInstructions,
+  profileOptimiserInstructions,
   roleMatchInstructions
 } from "./analysisPrompt.js";
-import { bulletOptimiserSchema, roleMatchSchema } from "./analysisSchema.js";
+import {
+  bulletOptimiserSchema,
+  contactNoteSchema,
+  profileOptimiserSchema,
+  roleMatchSchema
+} from "./analysisSchema.js";
 
 const DEFAULT_MODEL = "gpt-5-mini";
 const analysisConfigs = {
@@ -18,6 +25,18 @@ const analysisConfigs = {
     schema: bulletOptimiserSchema,
     schemaName: "rolefit_bullet_optimiser",
     maxOutputTokens: 2600
+  },
+  profileOptimiser: {
+    instructions: profileOptimiserInstructions,
+    schema: profileOptimiserSchema,
+    schemaName: "rolefit_profile_optimiser",
+    maxOutputTokens: 2600
+  },
+  contactNote: {
+    instructions: contactNoteInstructions,
+    schema: contactNoteSchema,
+    schemaName: "rolefit_contact_note",
+    maxOutputTokens: 1200
   }
 };
 
@@ -25,6 +44,7 @@ export async function requestOpenAiAnalysis({
   apiKey,
   resume,
   jobDescription,
+  motivationNote = "",
   analysisType = "roleMatch"
 }) {
   const config = analysisConfigs[analysisType] || analysisConfigs.roleMatch;
@@ -38,7 +58,7 @@ export async function requestOpenAiAnalysis({
     body: JSON.stringify({
       model: process.env.OPENAI_MODEL || DEFAULT_MODEL,
       instructions: config.instructions,
-      input: buildAnalysisInput({ resume, jobDescription }),
+      input: buildAnalysisInput({ resume, jobDescription, motivationNote }),
       max_output_tokens: config.maxOutputTokens,
       reasoning: {
         effort: "minimal"
