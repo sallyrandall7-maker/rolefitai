@@ -7,6 +7,7 @@ import {
   ChevronUp,
   FileSearch,
   ListChecks,
+  RotateCcw,
   Search,
   Sparkles,
   Upload
@@ -269,6 +270,21 @@ function App() {
     }
   }
 
+  function handleNewRole() {
+    setJobDescription("");
+    setKnownContext("");
+    setMotivationNote("");
+    setPriorityRequirements("");
+    setFitAnalysis(null);
+    setBulletAnalysis(null);
+    setProfileAnalysis(null);
+    setContactNote(null);
+    setError("");
+    setUploadMessage("");
+    setLoadingStepIndex(0);
+    setActiveStep("Fit Check");
+  }
+
   return (
     <main className="app-shell">
       <section
@@ -317,13 +333,24 @@ function App() {
         <label className="field">
           <span className="field-heading">
             Job Description
-            <button
-              className="sample-button"
-              onClick={() => setJobDescription(sampleJobDescription)}
-              type="button"
-            >
-              Load sample
-            </button>
+            <span className="field-actions">
+              <button
+                className="sample-button"
+                onClick={handleNewRole}
+                title="Clear this role and keep your resume"
+                type="button"
+              >
+                <RotateCcw size={15} aria-hidden="true" />
+                New role
+              </button>
+              <button
+                className="sample-button"
+                onClick={() => setJobDescription(sampleJobDescription)}
+                type="button"
+              >
+                Load sample
+              </button>
+            </span>
           </span>
           <textarea
             value={jobDescription}
