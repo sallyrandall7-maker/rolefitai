@@ -1,25 +1,26 @@
-# RoleFit AI
+# Sally's AI Career Coach
 
-RoleFit AI is a beginner-friendly React app that compares a resume with a job
-description and returns an AI-powered role fit analysis.
+Sally's AI Career Coach is a beginner-friendly React app that helps turn a
+resume and job description into a practical Apply Today workflow.
 
 ## What The App Does
 
 - Lets you paste a resume into one text box.
+- Lets you upload a `.docx` resume and review the extracted text.
 - Lets you paste a job description into another text box.
 - Sends both pieces of text to a small local server.
 - The local server safely calls the OpenAI API using the key in `.env`.
-- Includes a **Role Match** module for scores, gaps, risks, and interview
-  questions.
-- Includes an **ATS Bullet Optimiser** module for job keywords, weak resume
-  bullets, rewritten bullets, and top fixes.
+- Includes a **Fit Check** for application readiness, ATS match, missing areas,
+  and a job-ad-specific recruiter 8-second scan.
+- Includes an **Improve Resume** path for job ad keywords, weak resume bullets,
+  truthful rewritten bullets, and top fixes.
 
 ## How To Run It
 
 Open this folder in PowerShell:
 
 ```powershell
-cd "C:\Users\sally\OneDrive\Documents\Job search project"
+cd "C:\Users\sally\OneDrive\Documents\rolefit ai github"
 ```
 
 Then start the app:
@@ -62,7 +63,7 @@ OPENAI_MODEL=gpt-5-mini
 Never put the API key inside the `src` folder. Anything in `src` is browser
 code, which means users can inspect it.
 
-`OPENAI_MODEL` controls which OpenAI model RoleFit AI uses. The default is
+`OPENAI_MODEL` controls which OpenAI model the app uses. The default is
 `gpt-5-mini` because it is faster and more cost-efficient for this kind of
 well-defined resume analysis.
 
@@ -148,17 +149,16 @@ route both use this file.
 
 ### `server/analysisPrompt.js`
 
-This contains the main RoleFit AI prompt.
+This contains the main Sally's AI Career Coach prompts.
 
-The prompt tells the AI to compare the resume and job description across:
+The prompts tell the AI to compare the resume and job description across:
 
-- role fit
+- application readiness
 - ATS keyword match
-- recruiter search visibility
+- recruiter 8-second scan against the specific job ad
 - missing or weak keywords
 - resume improvements
-- interview risk areas
-- likely interview questions
+- truthful bullet rewrites
 
 ### `server/analysisSchema.js`
 
@@ -169,8 +169,9 @@ like:
 
 - `overallMatchScore`
 - `atsKeywordMatch`
-- `resumeSuggestions`
-- `likelyInterviewQuestions`
+- `recruiterScan`
+- `missingOrWeakKeywords`
+- `weakestBullets`
 
 ### `src/main.jsx`
 
@@ -183,12 +184,13 @@ This is the main screen. It contains:
 
 - the app title
 - the resume textarea
+- the `.docx` resume upload control
 - the job description textarea
-- the Analyse button
+- the Start Fit Check button
 - loading and error states
 - the results area
 
-When you click **Analyse**, this file sends the text to the local server at:
+When you click **Start Fit Check**, this file sends the text to the local server at:
 
 ```text
 http://127.0.0.1:8787/api/analyse

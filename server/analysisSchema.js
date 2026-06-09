@@ -10,39 +10,99 @@ export const roleMatchSchema = {
       type: "integer",
       description: "ATS keyword match score from 0 to 100."
     },
-    recruiterSearchSimulation: {
+    applicationReadiness: {
       type: "string",
-      description: "How discoverable the resume would be to a recruiter search."
+      enum: ["Risk", "Needs work", "Strong", "Ready to submit"],
+      description: "Plain-language readiness label for this application."
+    },
+    recruiterScan: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        recruiterTargetSummary: {
+          type: "string",
+          description: "One sentence summarising what the recruiter is looking for in this job ad."
+        },
+        whatRecruiterIsLookingFor: {
+          type: "array",
+          items: { type: "string" },
+          description: "Specific signals the recruiter is likely looking for based on the job ad."
+        },
+        whatRecruiterSees: {
+          type: "array",
+          items: { type: "string" },
+          description: "Specific signals the recruiter quickly sees in the resume."
+        },
+        firstPageAlignment: {
+          type: "array",
+          items: { type: "string" },
+          description: "Signals from the job ad that are visible in the resume's top profile, key capabilities, career summary, or first-page content."
+        },
+        firstPageGaps: {
+          type: "array",
+          items: { type: "string" },
+          description: "Important job-ad signals that are not quickly visible in the resume's first-page content."
+        },
+        attentionGate: {
+          type: "string",
+          enum: ["Passes", "Partial", "Misses"],
+          description: "Whether the first page captures recruiter attention for this job ad."
+        },
+        supportingEvidence: {
+          type: "array",
+          items: { type: "string" },
+          description: "Fast-scan evidence from later resume content, second page, or previous roles that visibly supports or weakens the shortlist decision."
+        },
+        decision: {
+          type: "string",
+          enum: ["Reject", "Maybe", "Shortlist", "Strong Shortlist", "Must Screen"]
+        },
+        reason: {
+          type: "string",
+          description: "Short reason for the recruiter decision."
+        }
+      },
+      required: [
+        "recruiterTargetSummary",
+        "whatRecruiterIsLookingFor",
+        "whatRecruiterSees",
+        "firstPageAlignment",
+        "firstPageGaps",
+        "attentionGate",
+        "supportingEvidence",
+        "decision",
+        "reason"
+      ]
     },
     missingOrWeakKeywords: {
       type: "array",
       items: { type: "string" },
       description: "Important job keywords that are missing or weak in the resume."
     },
+    topMatchingAreas: {
+      type: "array",
+      items: { type: "string" },
+      description: "Strongest resume-to-job matches."
+    },
     resumeSuggestions: {
       type: "array",
       items: { type: "string" },
       description: "Practical improvements the candidate can make to the resume."
     },
-    interviewRiskAreas: {
-      type: "array",
-      items: { type: "string" },
-      description: "Areas the candidate may be questioned about in interviews."
-    },
-    likelyInterviewQuestions: {
-      type: "array",
-      items: { type: "string" },
-      description: "Likely interview questions based on the role and resume gaps."
+    nextBestAction: {
+      type: "string",
+      description: "The clearest next action in the Apply Today workflow."
     }
   },
   required: [
     "overallMatchScore",
     "atsKeywordMatch",
-    "recruiterSearchSimulation",
+    "applicationReadiness",
+    "recruiterScan",
     "missingOrWeakKeywords",
+    "topMatchingAreas",
     "resumeSuggestions",
-    "interviewRiskAreas",
-    "likelyInterviewQuestions"
+    "nextBestAction"
   ]
 };
 
@@ -84,9 +144,18 @@ export const bulletOptimiserSchema = {
             type: "array",
             items: { type: "string" }
           },
-          rewrittenBullet: { type: "string" }
+          rewrittenBullet: { type: "string" },
+          whyThisHelps: { type: "string" },
+          truthfulnessNote: { type: "string" }
         },
-        required: ["originalBullet", "issue", "targetKeywords", "rewrittenBullet"]
+        required: [
+          "originalBullet",
+          "issue",
+          "targetKeywords",
+          "rewrittenBullet",
+          "whyThisHelps",
+          "truthfulnessNote"
+        ]
       }
     },
     topFixes: {
