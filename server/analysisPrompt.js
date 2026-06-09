@@ -12,8 +12,7 @@ Analyse these areas:
 3. Recruiter 8-second scan specific to this job ad
 4. Top matching areas
 5. Missing or weak keywords
-6. Recommended resume fixes
-7. Next best action
+6. Biggest risks
 
 Rules:
 - Be specific to the supplied resume and job description.
@@ -48,16 +47,9 @@ Rules:
 - Recruiter decision reason should be 2 short sentences maximum.
 - Top matching areas: return exactly 5 items.
 - Missing or weak keywords: return exactly 5 items.
-- Resume improvement suggestions: return exactly 5 items.
-- Each resume improvement suggestion must include: issue, applyTo, exampleWording, whyThisHelps, evidenceUsed, boundaryCheck, and truthfulnessNote.
-- ApplyTo must be one of: Profile, Key Capabilities, Bullet, Follow-up, Other.
-- Example wording must be a practical sentence or bullet the user can adapt immediately.
-- Example wording must not use dash punctuation. Avoid em dashes, en dashes, and hyphen-heavy phrasing.
-- If the fix uses additional candidate-provided context, the truthfulness note must say that the user supplied this context and should confirm it belongs in the resume.
-- EvidenceUsed must quote or closely paraphrase the exact resume evidence or known context used.
-- BoundaryCheck must explain what the suggestion does not claim. For example: "Does not claim enterprise AI platform leadership" or "Frames mentoring as transferable, not Delivery Lead management."
-- Each list item should be one short sentence or phrase.
-- Next best action should tell the user whether to polish ATS/bullets, profile/key capabilities, or prepare a follow-up note.
+- Biggest risks: return exactly 5 items.
+- Biggest risks must be diagnostic only. Do not include paste-ready wording, profile sentences, key capability lines, or bullet rewrites.
+- Each biggest risk should be one short sentence or phrase that helps the candidate understand where the application may fall short.
 - Return JSON that matches the requested schema.
 `;
 

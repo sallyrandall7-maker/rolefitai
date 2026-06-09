@@ -1,7 +1,7 @@
 # Sally's AI Career Coach
 
 Sally's AI Career Coach is a beginner-friendly React app that helps turn a
-resume and job description into a practical Apply Today workflow.
+resume and job description into a practical Apply Today workspace.
 
 ## What The App Does
 
@@ -11,17 +11,21 @@ resume and job description into a practical Apply Today workflow.
 - Sends both pieces of text to a small local server.
 - The local server safely calls the OpenAI API using the key in `.env`.
 - Includes a **Fit Check** for application readiness, ATS match, missing areas,
-  and a job-ad-specific recruiter 8-second scan.
+  biggest risks, and a job-ad-specific recruiter 8-second scan.
 - Includes separate **ATS + Bullets** and **Profile + Key Capabilities**
-  modules so each improvement path can be used on its own.
+  modules for paste-ready wording suggestions.
 - Includes a shared **Known experience or keywords to consider** box for
   truthful capabilities that are relevant but not obvious in the resume yet.
 - Fit Check is recommended but optional. You can start with any module, then
   run or re-run Fit Check later.
+- Fit Check is diagnostic only. Detailed wording changes belong in the
+  ATS + Bullets and Profile + Key Capabilities modules.
 - For now, re-review is handled by pasting the updated resume back into the
   resume box and re-running Fit Check.
 - Bullet rewrites use a clear what/how/so-what structure, such as
   `Delivered X by Y, resulting in Z`, while staying truthful.
+- ATS keyword labels now show priority, resume status, and whether an extra
+  known-experience note supports the keyword.
 - Profile optimisation can use an optional **What they're looking for** input
   to prioritise the most important job requirements, plus an optional
   motivation note to make the About Me/Profile section more personal.
@@ -171,7 +175,7 @@ The prompts tell the AI to compare the resume and job description across:
 - ATS keyword match
 - recruiter 8-second scan against the specific job ad
 - missing or weak keywords
-- resume improvements
+- biggest risks
 - truthful bullet rewrites
 - profile/about me and key capability rewrites
 

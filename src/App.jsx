@@ -24,7 +24,7 @@ const loadingSteps = [
   "Scanning the job description",
   "Checking ATS match",
   "Reviewing recruiter appeal",
-  "Preparing recommended fixes"
+  "Summarising biggest risks"
 ];
 const optimiserLoadingSteps = [
   "Extracting job ad keywords",
@@ -67,15 +67,6 @@ function App() {
   const [knownContext, setKnownContext] = useState("");
   const [activeStep, setActiveStep] = useState("Fit Check");
   const currentStep = activeStep;
-  const recommendedAction = getRecommendedAction({
-    contactNote,
-    fitAnalysis,
-    isAnalysing,
-    onFitCheck: handleFitCheck,
-    bulletAnalysis,
-    profileAnalysis
-  });
-  const RecommendedActionIcon = recommendedAction?.icon;
   const activeLoadingSteps = isGeneratingContactNote
     ? contactNoteLoadingSteps
     : isOptimisingProfile
@@ -353,31 +344,6 @@ function App() {
         </label>
       </section>
 
-      <section className="action-panel" aria-label="Recommended next action">
-        <div>
-          <p className="panel-label">Recommended next action</p>
-          <h2>{getRecommendedActionTitle({ fitAnalysis, bulletAnalysis, profileAnalysis, contactNote })}</h2>
-          <p>{getRecommendedActionText({ fitAnalysis, bulletAnalysis, profileAnalysis, contactNote })}</p>
-        </div>
-        {recommendedAction ? (
-          <div className="action-buttons">
-            <button
-              className="analyse-button"
-              disabled={recommendedAction.disabled}
-              onClick={
-                recommendedAction.module
-                  ? () => setActiveStep(recommendedAction.module)
-                  : recommendedAction.onClick
-              }
-              type="button"
-            >
-              {RecommendedActionIcon ? <RecommendedActionIcon size={18} aria-hidden="true" /> : null}
-              {recommendedAction.label}
-            </button>
-          </div>
-        ) : null}
-      </section>
-
       {error ? <p className="error-message">{error}</p> : null}
 
       <section className="results" aria-label="Apply Today results">
@@ -593,15 +559,6 @@ function FitCheckResults({ analysis }) {
 
   return (
     <div className="report">
-      <section className="next-action">
-        <div>
-          <p className="panel-label">Next best action</p>
-          <h2>{analysis.nextBestAction || readiness.nextAction}</h2>
-          <p>{readiness.reason}</p>
-        </div>
-        <span className={`status-chip ${readiness.statusClass}`}>{readiness.label}</span>
-      </section>
-
       <div className="results-grid">
         <ScoreCard
           title="Application Readiness"
@@ -625,8 +582,11 @@ function FitCheckResults({ analysis }) {
           <KeywordList items={safeList(analysis.missingOrWeakKeywords)} />
         </ResultCard>
 
-        <ResultCard title="Recommended Fixes" wide>
-          <SuggestedFixes items={safeList(analysis.resumeSuggestions)} />
+        <ResultCard title="Biggest Risks" wide>
+          <IconList
+            icon={<AlertTriangle size={18} />}
+            items={safeList(analysis.biggestRisks)}
+          />
         </ResultCard>
       </div>
 
@@ -915,15 +875,12 @@ function BulletOptimiserResults({ analysis }) {
                 <strong>{keyword.keyword}</strong>
                 <p>{keyword.whyItMatters}</p>
               </div>
-              <span>{keyword.importance}</span>
+              <span>{getKeywordImportanceLabel(keyword.importance)}</span>
               <span className={`status ${getKeywordStatusClass(keyword.resumeStatus)}`}>
-                {keyword.resumeStatus}
+                {getKeywordResumeStatusLabel(keyword.resumeStatus)}
               </span>
               <small className="keyword-context">
-                {keyword.knownContextSupport}
-                {keyword.contextUsed && keyword.contextUsed !== "None"
-                  ? `: ${keyword.contextUsed}`
-                  : ""}
+                {getKnownContextLabel(keyword)}
               </small>
             </div>
           ))}
@@ -964,44 +921,6 @@ function BulletOptimiserResults({ analysis }) {
       <ResultCard title="Top Fixes" wide>
         <IconList icon={<CheckCircle2 size={18} />} items={analysis.topFixes} />
       </ResultCard>
-    </div>
-  );
-}
-
-function SuggestedFixes({ items }) {
-  return (
-    <div className="suggested-fixes">
-      {items.map((fix) => {
-        if (typeof fix === "string") {
-          return (
-            <article className="fix-card" key={fix}>
-              <span className="status reword">Fix</span>
-              <p>{fix}</p>
-            </article>
-          );
-        }
-
-        return (
-          <article className="fix-card" key={`${fix.applyTo}-${fix.issue}`}>
-            <div className="fix-card-header">
-              <span className={`status ${getSuggestionAreaClass(fix.applyTo)}`}>
-                {fix.applyTo}
-              </span>
-              <strong>{fix.issue}</strong>
-            </div>
-            <div>
-              <span className="bullet-label">Example</span>
-              <p className="rewritten-bullet">{fix.exampleWording}</p>
-            </div>
-            <p>{fix.whyThisHelps}</p>
-            <EvidenceNotes
-              boundaryCheck={fix.boundaryCheck}
-              evidenceUsed={fix.evidenceUsed}
-            />
-            <p className="truth-note">{fix.truthfulnessNote}</p>
-          </article>
-        );
-      })}
     </div>
   );
 }
@@ -1165,100 +1084,6 @@ function getFriendlyRequestError(error) {
   return message || "Something went wrong while running the analysis.";
 }
 
-function getRecommendedActionTitle({
-  fitAnalysis,
-  bulletAnalysis,
-  profileAnalysis,
-  contactNote
-}) {
-  if (!fitAnalysis) {
-    return "Choose the module you need";
-  }
-
-  if (!profileAnalysis) {
-    return "Tighten the first page next";
-  }
-
-  if (!bulletAnalysis) {
-    return "Support the profile with stronger bullets";
-  }
-
-  if (!contactNote) {
-    return "Prepare a hiring manager outreach message";
-  }
-
-  return "Ready for this application";
-}
-
-function getRecommendedActionText({
-  fitAnalysis,
-  bulletAnalysis,
-  profileAnalysis,
-  contactNote
-}) {
-  if (!fitAnalysis) {
-    return "Run Fit Check for a diagnostic, or go straight to ATS + Bullets or Profile + Key Capabilities if you already know the role fits.";
-  }
-
-  if (!profileAnalysis) {
-    return "Fit Check is done. Use Profile + Key Capabilities to make the top of the resume match what the recruiter is looking for.";
-  }
-
-  if (!bulletAnalysis) {
-    return "The top-page positioning is drafted. Use ATS + Bullets so the detailed experience supports that positioning.";
-  }
-
-  if (!contactNote) {
-    return "Resume improvements are ready. Use Follow-up to draft a human LinkedIn message for the hiring manager after applying.";
-  }
-
-  return "You have a fit read, resume improvements, and a follow-up note. Re-run any module whenever the resume or job ad changes.";
-}
-
-function getRecommendedAction({
-  fitAnalysis,
-  bulletAnalysis,
-  profileAnalysis,
-  contactNote,
-  isAnalysing,
-  onFitCheck
-}) {
-  if (!fitAnalysis) {
-    return {
-      disabled: isAnalysing,
-      icon: Sparkles,
-      label: isAnalysing ? "Checking..." : "Start Fit Check",
-      onClick: onFitCheck
-    };
-  }
-
-  if (!profileAnalysis) {
-    return {
-      icon: ArrowRight,
-      label: "Go to Profile + Key Capabilities",
-      module: "Profile + Key Capabilities"
-    };
-  }
-
-  if (!bulletAnalysis) {
-    return {
-      icon: ArrowRight,
-      label: "Go to ATS + Bullets",
-      module: "ATS + Bullets"
-    };
-  }
-
-  if (!contactNote) {
-    return {
-      icon: ArrowRight,
-      label: "Go to Follow-up",
-      module: "Follow-up"
-    };
-  }
-
-  return null;
-}
-
 function getStatusClass(status) {
   if (status === "Strong" || status === "Ready to submit") return "strong";
   if (status === "Needs work") return "needs-work";
@@ -1295,17 +1120,36 @@ function getBulletActionClass(action) {
   return "reword";
 }
 
-function getSuggestionAreaClass(area) {
-  if (area === "Profile" || area === "Key Capabilities") return "add";
-  if (area === "Bullet") return "reword";
-  if (area === "Follow-up") return "keep";
-  return "weak";
-}
-
 function getKeywordStatusClass(status) {
   if (status === "Found") return "found";
   if (status === "Weak") return "weak";
   return "missing";
+}
+
+function getKeywordImportanceLabel(importance) {
+  if (!importance) return "Priority";
+  return `${importance} priority`;
+}
+
+function getKeywordResumeStatusLabel(status) {
+  if (status === "Found") return "Found in resume";
+  if (status === "Weak") return "Weak in resume";
+  if (status === "Missing") return "Missing from resume";
+  return status || "Resume status";
+}
+
+function getKnownContextLabel(keyword) {
+  if (keyword.knownContextSupport === "Supported by known context") {
+    return keyword.contextUsed && keyword.contextUsed !== "None"
+      ? `Extra note: ${keyword.contextUsed}`
+      : "Extra note supplied";
+  }
+
+  if (keyword.knownContextSupport === "Not supported") {
+    return "No supporting note";
+  }
+
+  return "No extra note";
 }
 
 async function extractDocxText(file) {

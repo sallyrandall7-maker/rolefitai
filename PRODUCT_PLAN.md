@@ -24,7 +24,7 @@ The immediate product focus is:
 Help me decide, tailor, and submit a resume today.
 ```
 
-Interview preparation is important, but it should come after the resume submission workflow is strong enough to use for real applications.
+Interview preparation is important, but it should come after the Apply Today modules are clean enough to use for real applications.
 
 ## Core Inputs
 
@@ -99,14 +99,13 @@ Outputs:
 - Potential ATS risks
 - Generic or weak resume sections
 - Likelihood of passing ATS
-- Specific recommendations to improve ATS performance
-- Recommended fixes with example wording, where to apply the fix, why it helps, and a truthfulness note
+- Biggest risks, shown as diagnostic signals only
 
 Rules:
 
 - ATS and application readiness scores must be based on the resume as written.
-- Optional known experience or keywords can inform suggestions, but should not inflate the ATS score unless the content is already visible in the resume.
-- Recommended fixes should show the evidence used and a scope check when optional known experience informs the example wording.
+- Optional known experience or keywords can help explain possible gaps, but should not inflate the ATS score unless the content is already visible in the resume.
+- Fit Check should not generate paste-ready profile, capability, or bullet wording. Those belong in the ATS + Bullets and Profile + Key Capabilities modules.
 
 User question answered:
 
@@ -141,7 +140,7 @@ Outputs:
 - Credibility
 - Recruiter decision: Reject, Maybe, Shortlist, Strong Shortlist, or Must Screen
 - Short reason for the decision
-- Recommendations to improve recruiter attention and application conversion
+- Biggest risks to recruiter attention and application conversion
 
 Rules:
 
@@ -433,7 +432,7 @@ Priority:
 
 ## Recommended App Journey
 
-The app should feel like an interconnected job application desk. The user should be able to start with the module they need, while still seeing a recommended next action when helpful.
+The app should feel like an interconnected job application desk. The user should be able to start with the module they need without being forced through a workflow.
 
 ### Shared Inputs
 
@@ -464,7 +463,7 @@ The user sees:
 - What the recruiter is looking for in this specific job ad
 - What the recruiter would quickly see in the resume
 - Whether the resume currently reads as Reject, Maybe, Shortlist, Strong Shortlist, or Must Screen
-- A recommended next action
+- Biggest risks to fix in the dedicated improvement modules
 
 ### Module 2: ATS + Bullets
 
@@ -473,7 +472,9 @@ The ATS + Bullets module helps the user strengthen job-ad keyword coverage and w
 It should show:
 
 - Job ad keyword
-- Resume status: Found, Weak, or Missing
+- Priority label: High priority, Medium priority, or Low priority
+- Resume status: Found in resume, Weak in resume, or Missing from resume
+- Known experience note: Extra note, No extra note, or No supporting note
 - Original weak bullet
 - Change to this improved bullet
 - Why this helps
@@ -546,7 +547,7 @@ For the immediate version, the user can:
 
 - Paste the revised resume into the resume input
 - Re-run Fit Check
-- Use the updated ATS match, recruiter scan, missing areas, and next action as the practical re-review
+- Use the updated ATS match, recruiter scan, missing areas, and biggest risks as the practical re-review
 
 Later, a dedicated Review module may compare:
 
@@ -583,9 +584,7 @@ Modules: Fit Check -> ATS + Bullets -> Profile + Key Capabilities -> Follow-up
 
 Resume input | Job description input
 
-Recommended next action
 Results
-Recommended next action
 ```
 
 Feel:
@@ -676,7 +675,7 @@ Fit Check should be recommended but not mandatory. The user can:
 - Use Follow-up after applying when they can see someone on the hiring team
 - Re-run any module after editing the resume, job description, motivation note, or known experience/keywords
 
-The app should keep a Recommended next action panel, but it should guide rather than lock the user into a workflow.
+The app should not show a global Recommended next action panel in this phase. Module tabs are enough, and each module should keep its own output focused.
 
 ## Mobile And Upload Requirements
 
@@ -688,7 +687,6 @@ Mobile rules:
 - Stack resume input above job description input.
 - Make primary action buttons full-width and easy to tap.
 - Keep result sections full-width.
-- Keep the next best action near the top of results.
 - Do not rely on hover-only controls.
 - Make copy buttons large enough for touch use.
 

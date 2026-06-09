@@ -84,38 +84,10 @@ export const roleMatchSchema = {
       items: { type: "string" },
       description: "Strongest resume-to-job matches."
     },
-    resumeSuggestions: {
+    biggestRisks: {
       type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          issue: { type: "string" },
-          applyTo: {
-            type: "string",
-            enum: ["Profile", "Key Capabilities", "Bullet", "Follow-up", "Other"]
-          },
-          exampleWording: { type: "string" },
-          whyThisHelps: { type: "string" },
-          evidenceUsed: { type: "string" },
-          boundaryCheck: { type: "string" },
-          truthfulnessNote: { type: "string" }
-        },
-        required: [
-          "issue",
-          "applyTo",
-          "exampleWording",
-          "whyThisHelps",
-          "evidenceUsed",
-          "boundaryCheck",
-          "truthfulnessNote"
-        ]
-      },
-      description: "Practical improvements the candidate can make to the resume, including example wording."
-    },
-    nextBestAction: {
-      type: "string",
-      description: "The clearest next action in the Apply Today workflow."
+      items: { type: "string" },
+      description: "The biggest diagnostic risks for this application, without rewrite examples."
     }
   },
   required: [
@@ -125,8 +97,7 @@ export const roleMatchSchema = {
     "recruiterScan",
     "missingOrWeakKeywords",
     "topMatchingAreas",
-    "resumeSuggestions",
-    "nextBestAction"
+    "biggestRisks"
   ]
 };
 
