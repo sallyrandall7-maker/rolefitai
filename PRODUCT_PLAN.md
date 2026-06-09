@@ -458,6 +458,7 @@ Fit Check includes:
 The user sees:
 
 - Whether this role is worth applying for
+- Should I apply based on fit: Yes, Not yet, or No
 - Whether the resume is likely to pass screening
 - What is missing
 - What the recruiter is looking for in this specific job ad

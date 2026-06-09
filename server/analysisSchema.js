@@ -15,6 +15,22 @@ export const roleMatchSchema = {
       enum: ["Risk", "Needs work", "Strong", "Ready to submit"],
       description: "Plain-language readiness label for this application."
     },
+    applyRecommendation: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        decision: {
+          type: "string",
+          enum: ["Yes", "Not yet", "No"],
+          description: "Whether the candidate should apply based on current fit."
+        },
+        reason: {
+          type: "string",
+          description: "Short explanation of the apply recommendation."
+        }
+      },
+      required: ["decision", "reason"]
+    },
     recruiterScan: {
       type: "object",
       additionalProperties: false,
@@ -94,6 +110,7 @@ export const roleMatchSchema = {
     "overallMatchScore",
     "atsKeywordMatch",
     "applicationReadiness",
+    "applyRecommendation",
     "recruiterScan",
     "missingOrWeakKeywords",
     "topMatchingAreas",

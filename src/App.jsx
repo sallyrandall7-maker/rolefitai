@@ -555,11 +555,21 @@ function FitCheckStart({ onRunFitCheck }) {
 
 function FitCheckResults({ analysis }) {
   const readiness = getReadiness(analysis);
+  const applyRecommendation = normaliseApplyRecommendation(analysis.applyRecommendation);
   const recruiterScan = normaliseRecruiterScan(analysis.recruiterScan);
 
   return (
     <div className="report">
       <div className="results-grid">
+        <ResultCard title="Should I apply based on fit?" wide>
+          <div className="apply-recommendation">
+            <span className={`status-chip ${getApplyRecommendationClass(applyRecommendation.decision)}`}>
+              {applyRecommendation.decision}
+            </span>
+            <p>{applyRecommendation.reason}</p>
+          </div>
+        </ResultCard>
+
         <ScoreCard
           title="Application Readiness"
           score={normaliseScore(analysis.overallMatchScore)}
@@ -1074,6 +1084,15 @@ function normaliseRecruiterScan(scan = {}) {
   };
 }
 
+function normaliseApplyRecommendation(recommendation = {}) {
+  return {
+    decision: recommendation.decision || "Not yet",
+    reason:
+      recommendation.reason ||
+      "Use the readiness score, ATS match, and recruiter scan before deciding whether to apply."
+  };
+}
+
 function getFriendlyRequestError(error) {
   const message = error?.message || "";
 
@@ -1099,6 +1118,12 @@ function getDecisionStatusClass(decision) {
     return "needs-work";
   }
 
+  return "risk";
+}
+
+function getApplyRecommendationClass(decision) {
+  if (decision === "Yes") return "strong";
+  if (decision === "Not yet") return "needs-work";
   return "risk";
 }
 

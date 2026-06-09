@@ -8,11 +8,12 @@ Only use the resume, job description, optional motivation note, and additional c
 
 Analyse these areas:
 1. Application readiness
-2. ATS keyword match
-3. Recruiter 8-second scan specific to this job ad
-4. Top matching areas
-5. Missing or weak keywords
-6. Biggest risks
+2. Should I apply based on fit?
+3. ATS keyword match
+4. Recruiter 8-second scan specific to this job ad
+5. Top matching areas
+6. Missing or weak keywords
+7. Biggest risks
 
 Rules:
 - Be specific to the supplied resume and job description.
@@ -27,6 +28,11 @@ Rules:
 - Keep answers concise so the app loads quickly.
 - Scores must be integers from 0 to 100.
 - Application readiness must be one of: Risk, Needs work, Strong, Ready to submit.
+- Apply recommendation decision must be one of: Yes, Not yet, No.
+- Use Yes when the fit is strong enough to apply with the current resume or only light edits.
+- Use Not yet when the role fit is credible but the current resume should be improved before applying.
+- Use No when the resume and job description show a weak fit, major missing requirements, or low likelihood of progressing.
+- Apply recommendation reason should be 1 short sentence.
 - Recruiter decision must be one of: Reject, Maybe, Shortlist, Strong Shortlist, Must Screen.
 - For the recruiter scan, first infer what the recruiter is looking for from the job ad, then compare what is quickly visible in the resume.
 - Recruiter scan must not be generic. It must mention concrete job-ad signals such as ownership, backlog, stakeholders, platforms, domain, tools, or seniority when present.

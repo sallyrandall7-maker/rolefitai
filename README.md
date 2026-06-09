@@ -12,6 +12,8 @@ resume and job description into a practical Apply Today workspace.
 - The local server safely calls the OpenAI API using the key in `.env`.
 - Includes a **Fit Check** for application readiness, ATS match, missing areas,
   biggest risks, and a job-ad-specific recruiter 8-second scan.
+- Fit Check starts with a practical **Should I apply based on fit?** answer:
+  Yes, Not yet, or No.
 - Includes separate **ATS + Bullets** and **Profile + Key Capabilities**
   modules for paste-ready wording suggestions.
 - Includes a shared **Known experience or keywords to consider** box for
