@@ -78,6 +78,8 @@ async function handleAnalyse(request, response) {
     const resume = String(body.resume || "").trim();
     const jobDescription = String(body.jobDescription || "").trim();
     const motivationNote = String(body.motivationNote || "").trim();
+    const priorityRequirements = String(body.priorityRequirements || "").trim();
+    const knownContext = String(body.knownContext || "").trim();
     const analysisType = String(body.analysisType || "roleMatch");
 
     if (!resume || !jobDescription) {
@@ -99,6 +101,8 @@ async function handleAnalyse(request, response) {
       resume,
       jobDescription,
       motivationNote,
+      priorityRequirements,
+      knownContext,
       analysisType
     });
 

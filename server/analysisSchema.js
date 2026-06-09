@@ -86,8 +86,32 @@ export const roleMatchSchema = {
     },
     resumeSuggestions: {
       type: "array",
-      items: { type: "string" },
-      description: "Practical improvements the candidate can make to the resume."
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          issue: { type: "string" },
+          applyTo: {
+            type: "string",
+            enum: ["Profile", "Key Capabilities", "Bullet", "Follow-up", "Other"]
+          },
+          exampleWording: { type: "string" },
+          whyThisHelps: { type: "string" },
+          evidenceUsed: { type: "string" },
+          boundaryCheck: { type: "string" },
+          truthfulnessNote: { type: "string" }
+        },
+        required: [
+          "issue",
+          "applyTo",
+          "exampleWording",
+          "whyThisHelps",
+          "evidenceUsed",
+          "boundaryCheck",
+          "truthfulnessNote"
+        ]
+      },
+      description: "Practical improvements the candidate can make to the resume, including example wording."
     },
     nextBestAction: {
       type: "string",
@@ -126,18 +150,34 @@ export const bulletOptimiserSchema = {
             type: "string",
             enum: ["Found", "Weak", "Missing"]
           },
+          knownContextSupport: {
+            type: "string",
+            enum: ["Supported by known context", "Not supplied", "Not supported"]
+          },
+          contextUsed: { type: "string" },
           whyItMatters: { type: "string" }
         },
-        required: ["keyword", "importance", "resumeStatus", "whyItMatters"]
+        required: [
+          "keyword",
+          "importance",
+          "resumeStatus",
+          "knownContextSupport",
+          "contextUsed",
+          "whyItMatters"
+        ]
       }
     },
     weakestBullets: {
       type: "array",
-      description: "Resume bullets that should be improved for the target role.",
+      description: "Resume bullet changes that should be rewritten or newly added for the target role.",
       items: {
         type: "object",
         additionalProperties: false,
         properties: {
+          action: {
+            type: "string",
+            enum: ["Rewrite", "Add"]
+          },
           originalBullet: { type: "string" },
           issue: { type: "string" },
           targetKeywords: {
@@ -146,14 +186,19 @@ export const bulletOptimiserSchema = {
           },
           rewrittenBullet: { type: "string" },
           whyThisHelps: { type: "string" },
+          evidenceUsed: { type: "string" },
+          boundaryCheck: { type: "string" },
           truthfulnessNote: { type: "string" }
         },
         required: [
+          "action",
           "originalBullet",
           "issue",
           "targetKeywords",
           "rewrittenBullet",
           "whyThisHelps",
+          "evidenceUsed",
+          "boundaryCheck",
           "truthfulnessNote"
         ]
       }
@@ -213,9 +258,30 @@ export const profileOptimiserSchema = {
             enum: ["Keep", "Add", "Reword", "Remove"]
           },
           suggestedWording: { type: "string" },
+          evidenceSource: {
+            type: "string",
+            enum: [
+              "Current Key Capabilities",
+              "Profile/About Me",
+              "Career Summary",
+              "Role Detail",
+              "Known Context",
+              "Job Description Gap"
+            ]
+          },
+          evidenceUsed: { type: "string" },
+          boundaryCheck: { type: "string" },
           reason: { type: "string" }
         },
-        required: ["capability", "action", "suggestedWording", "reason"]
+        required: [
+          "capability",
+          "action",
+          "suggestedWording",
+          "evidenceSource",
+          "evidenceUsed",
+          "boundaryCheck",
+          "reason"
+        ]
       }
     },
     topSectionGaps: {
@@ -248,15 +314,15 @@ export const contactNoteSchema = {
   properties: {
     shortNote: {
       type: "string",
-      description: "A short human LinkedIn message to someone on the hiring team."
+      description: "A 150-250 word human LinkedIn message to a hiring manager after applying."
     },
     whyMeLine: {
       type: "string",
-      description: "The concise why-me reasoning used in the note."
+      description: "The strongest aligned experience used in the note."
     },
     whyThemLine: {
       type: "string",
-      description: "The concise why-this-company-or-role reasoning used in the note."
+      description: "The role need, operating style, or company context the note responds to."
     },
     toneCheck: {
       type: "string",

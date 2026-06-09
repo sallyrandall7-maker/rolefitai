@@ -36,7 +36,7 @@ const analysisConfigs = {
     instructions: contactNoteInstructions,
     schema: contactNoteSchema,
     schemaName: "rolefit_contact_note",
-    maxOutputTokens: 1200
+    maxOutputTokens: 1800
   }
 };
 
@@ -45,6 +45,8 @@ export async function requestOpenAiAnalysis({
   resume,
   jobDescription,
   motivationNote = "",
+  priorityRequirements = "",
+  knownContext = "",
   analysisType = "roleMatch"
 }) {
   const config = analysisConfigs[analysisType] || analysisConfigs.roleMatch;
@@ -58,7 +60,13 @@ export async function requestOpenAiAnalysis({
     body: JSON.stringify({
       model: process.env.OPENAI_MODEL || DEFAULT_MODEL,
       instructions: config.instructions,
-      input: buildAnalysisInput({ resume, jobDescription, motivationNote }),
+      input: buildAnalysisInput({
+        resume,
+        jobDescription,
+        motivationNote,
+        priorityRequirements,
+        knownContext
+      }),
       max_output_tokens: config.maxOutputTokens,
       reasoning: {
         effort: "minimal"

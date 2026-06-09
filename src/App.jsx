@@ -18,7 +18,7 @@ const API_URL = import.meta.env.PROD
   ? "/api/analyse"
   : "http://127.0.0.1:8787/api/analyse";
 
-const workflowSteps = ["Fit Check", "Improve Resume", "Re-Review", "Submit"];
+const moduleTabs = ["Fit Check", "ATS + Bullets", "Profile + Key Capabilities", "Follow-up"];
 const loadingSteps = [
   "Reading the resume",
   "Scanning the job description",
@@ -42,8 +42,9 @@ const profileLoadingSteps = [
 ];
 const contactNoteLoadingSteps = [
   "Reading the role context",
-  "Finding the why-me angle",
-  "Writing a short human note",
+  "Reading the hiring signals",
+  "Finding the fit angle",
+  "Writing the outreach message",
   "Checking tone and length"
 ];
 
@@ -62,11 +63,19 @@ function App() {
   const [error, setError] = useState("");
   const [uploadMessage, setUploadMessage] = useState("");
   const [motivationNote, setMotivationNote] = useState("");
-  const currentStep = contactNote || isGeneratingContactNote
-    ? "Submit"
-    : bulletAnalysis || profileAnalysis || isOptimising || isOptimisingProfile
-      ? "Improve Resume"
-      : "Fit Check";
+  const [priorityRequirements, setPriorityRequirements] = useState("");
+  const [knownContext, setKnownContext] = useState("");
+  const [activeStep, setActiveStep] = useState("Fit Check");
+  const currentStep = activeStep;
+  const recommendedAction = getRecommendedAction({
+    contactNote,
+    fitAnalysis,
+    isAnalysing,
+    onFitCheck: handleFitCheck,
+    bulletAnalysis,
+    profileAnalysis
+  });
+  const RecommendedActionIcon = recommendedAction?.icon;
   const activeLoadingSteps = isGeneratingContactNote
     ? contactNoteLoadingSteps
     : isOptimisingProfile
@@ -124,10 +133,8 @@ function App() {
   async function handleFitCheck() {
     setError("");
     setFitAnalysis(null);
-    setBulletAnalysis(null);
-    setProfileAnalysis(null);
-    setContactNote(null);
     setLoadingStepIndex(0);
+    setActiveStep("Fit Check");
     setIsAnalysing(true);
 
     try {
@@ -139,6 +146,7 @@ function App() {
         body: JSON.stringify({
           resume,
           jobDescription,
+          knownContext,
           analysisType: "roleMatch"
         })
       });
@@ -150,6 +158,7 @@ function App() {
       }
 
       setFitAnalysis(data);
+      setActiveStep("Fit Check");
     } catch (requestError) {
       setFitAnalysis(null);
       setError(getFriendlyRequestError(requestError));
@@ -162,6 +171,7 @@ function App() {
     setError("");
     setBulletAnalysis(null);
     setLoadingStepIndex(0);
+    setActiveStep("ATS + Bullets");
     setIsOptimising(true);
 
     try {
@@ -173,6 +183,7 @@ function App() {
         body: JSON.stringify({
           resume,
           jobDescription,
+          knownContext,
           analysisType: "bulletOptimiser"
         })
       });
@@ -196,6 +207,7 @@ function App() {
     setError("");
     setProfileAnalysis(null);
     setLoadingStepIndex(0);
+    setActiveStep("Profile + Key Capabilities");
     setIsOptimisingProfile(true);
 
     try {
@@ -208,6 +220,8 @@ function App() {
           resume,
           jobDescription,
           motivationNote,
+          priorityRequirements,
+          knownContext,
           analysisType: "profileOptimiser"
         })
       });
@@ -231,6 +245,7 @@ function App() {
     setError("");
     setContactNote(null);
     setLoadingStepIndex(0);
+    setActiveStep("Follow-up");
     setIsGeneratingContactNote(true);
 
     try {
@@ -243,6 +258,7 @@ function App() {
           resume,
           jobDescription,
           motivationNote,
+          knownContext,
           analysisType: "contactNote"
         })
       });
@@ -250,7 +266,7 @@ function App() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.details || data.error || "The contact note request failed.");
+        throw new Error(data.details || data.error || "The outreach message request failed.");
       }
 
       setContactNote(data);
@@ -278,7 +294,11 @@ function App() {
         </div>
       </section>
 
-      <ProgressSteps steps={workflowSteps} currentStep={currentStep} />
+      <ProgressSteps
+        currentStep={currentStep}
+        onStepChange={setActiveStep}
+        steps={moduleTabs}
+      />
 
       <section className="workspace" aria-label="Resume and job description form">
         <label className="field">
@@ -322,29 +342,56 @@ function App() {
         </label>
       </section>
 
+      <section className="context-panel" aria-label="Known experience and keywords">
+        <label className="field">
+          <span className="field-heading">Known experience or keywords to consider</span>
+          <textarea
+            value={knownContext}
+            onChange={(event) => setKnownContext(event.target.value)}
+            placeholder="Add true experience or keywords that are missing from the resume, such as MDM, data governance, vendor management, Salesforce migration..."
+          />
+        </label>
+      </section>
+
       <section className="action-panel" aria-label="Recommended next action">
         <div>
           <p className="panel-label">Recommended next action</p>
-          <h2>Start with a Fit Check</h2>
-          <p>
-            First we will check application readiness, ATS match, recruiter
-            appeal, gaps, and the most useful fixes.
-          </p>
+          <h2>{getRecommendedActionTitle({ fitAnalysis, bulletAnalysis, profileAnalysis, contactNote })}</h2>
+          <p>{getRecommendedActionText({ fitAnalysis, bulletAnalysis, profileAnalysis, contactNote })}</p>
         </div>
-        <button className="analyse-button" onClick={handleFitCheck} disabled={isAnalysing}>
-          <Sparkles size={18} aria-hidden="true" />
-          {isAnalysing ? "Checking..." : "Start Fit Check"}
-        </button>
+        {recommendedAction ? (
+          <div className="action-buttons">
+            <button
+              className="analyse-button"
+              disabled={recommendedAction.disabled}
+              onClick={
+                recommendedAction.module
+                  ? () => setActiveStep(recommendedAction.module)
+                  : recommendedAction.onClick
+              }
+              type="button"
+            >
+              {RecommendedActionIcon ? <RecommendedActionIcon size={18} aria-hidden="true" /> : null}
+              {recommendedAction.label}
+            </button>
+          </div>
+        ) : null}
       </section>
 
       {error ? <p className="error-message">{error}</p> : null}
 
       <section className="results" aria-label="Apply Today results">
-        {isGeneratingContactNote ? (
+        {isAnalysing ? (
+          <LoadingResults
+            currentStepIndex={loadingStepIndex}
+            loadingSteps={loadingSteps}
+            title="Running Fit Check"
+          />
+        ) : isGeneratingContactNote ? (
           <LoadingResults
             currentStepIndex={loadingStepIndex}
             loadingSteps={contactNoteLoadingSteps}
-            title="Writing contact note"
+            title="Writing hiring manager outreach"
           />
         ) : isOptimisingProfile ? (
           <LoadingResults
@@ -358,8 +405,9 @@ function App() {
             loadingSteps={optimiserLoadingSteps}
             title="Optimising resume bullets"
           />
-        ) : fitAnalysis ? (
-          <FitCheckResults
+        ) : (
+          <ApplyTodayWorkspace
+            activeStep={activeStep}
             analysis={fitAnalysis}
             bulletAnalysis={bulletAnalysis}
             profileAnalysis={profileAnalysis}
@@ -370,24 +418,30 @@ function App() {
             onOptimiseBullets={handleBulletOptimiser}
             onOptimiseProfile={handleProfileOptimiser}
             onGenerateContactNote={handleContactNote}
+            onRunFitCheck={handleFitCheck}
             motivationNote={motivationNote}
             onMotivationNoteChange={setMotivationNote}
+            priorityRequirements={priorityRequirements}
+            onPriorityRequirementsChange={setPriorityRequirements}
           />
-        ) : (
-          <EmptyResults isAnalysing={isAnalysing} loadingStepIndex={loadingStepIndex} />
         )}
       </section>
     </main>
   );
 }
 
-function ProgressSteps({ steps, currentStep }) {
+function ProgressSteps({ steps, currentStep, onStepChange }) {
   return (
     <nav className="progress-steps" aria-label="Apply Today progress">
       {steps.map((step) => (
-        <span className={step === currentStep ? "active" : ""} key={step}>
+        <button
+          className={step === currentStep ? "active" : ""}
+          key={step}
+          onClick={() => onStepChange(step)}
+          type="button"
+        >
           {step}
-        </span>
+        </button>
       ))}
     </nav>
   );
@@ -457,7 +511,8 @@ function LoadingResults({ currentStepIndex, loadingSteps, title = "Running Fit C
   );
 }
 
-function FitCheckResults({
+function ApplyTodayWorkspace({
+  activeStep,
   analysis,
   bulletAnalysis,
   profileAnalysis,
@@ -468,9 +523,71 @@ function FitCheckResults({
   onOptimiseBullets,
   onOptimiseProfile,
   onGenerateContactNote,
+  onRunFitCheck,
   motivationNote,
-  onMotivationNoteChange
+  onMotivationNoteChange,
+  priorityRequirements,
+  onPriorityRequirementsChange
 }) {
+  if (activeStep === "ATS + Bullets") {
+    return (
+      <AtsBulletsPanel
+        bulletAnalysis={bulletAnalysis}
+        isOptimising={isOptimising}
+        onOptimiseBullets={onOptimiseBullets}
+      />
+    );
+  }
+
+  if (activeStep === "Profile + Key Capabilities") {
+    return (
+      <ProfileCapabilitiesPanel
+        isOptimisingProfile={isOptimisingProfile}
+        motivationNote={motivationNote}
+        onMotivationNoteChange={onMotivationNoteChange}
+        onOptimiseProfile={onOptimiseProfile}
+        onPriorityRequirementsChange={onPriorityRequirementsChange}
+        profileAnalysis={profileAnalysis}
+        priorityRequirements={priorityRequirements}
+      />
+    );
+  }
+
+  if (activeStep === "Follow-up") {
+    return (
+      <FollowUpPanel
+        contactNote={contactNote}
+        isGeneratingContactNote={isGeneratingContactNote}
+        onGenerateContactNote={onGenerateContactNote}
+      />
+    );
+  }
+
+  if (!analysis) {
+    return <FitCheckStart onRunFitCheck={onRunFitCheck} />;
+  }
+
+  return <FitCheckResults analysis={analysis} />;
+}
+
+function FitCheckStart({ onRunFitCheck }) {
+  return (
+    <div className="empty-state">
+      <FileSearch size={34} aria-hidden="true" />
+      <h2>Your Fit Check report will appear here</h2>
+      <p>
+        Run Fit Check when you want to review application readiness, ATS match,
+        and recruiter scan. You can also use any other module first.
+      </p>
+      <button className="analyse-button" onClick={onRunFitCheck} type="button">
+        <Sparkles size={18} aria-hidden="true" />
+        Start Fit Check
+      </button>
+    </div>
+  );
+}
+
+function FitCheckResults({ analysis }) {
   const readiness = getReadiness(analysis);
   const recruiterScan = normaliseRecruiterScan(analysis.recruiterScan);
 
@@ -509,29 +626,10 @@ function FitCheckResults({
         </ResultCard>
 
         <ResultCard title="Recommended Fixes" wide>
-          <IconList
-            icon={<AlertTriangle size={18} />}
-            items={safeList(analysis.resumeSuggestions)}
-          />
+          <SuggestedFixes items={safeList(analysis.resumeSuggestions)} />
         </ResultCard>
       </div>
 
-      <ImproveResumePanel
-        bulletAnalysis={bulletAnalysis}
-        profileAnalysis={profileAnalysis}
-        isOptimising={isOptimising}
-        isOptimisingProfile={isOptimisingProfile}
-        onOptimiseBullets={onOptimiseBullets}
-        onOptimiseProfile={onOptimiseProfile}
-        motivationNote={motivationNote}
-        onMotivationNoteChange={onMotivationNoteChange}
-      />
-
-      <SubmitPanel
-        contactNote={contactNote}
-        isGeneratingContactNote={isGeneratingContactNote}
-        onGenerateContactNote={onGenerateContactNote}
-      />
     </div>
   );
 }
@@ -598,79 +696,82 @@ function RecruiterScan({ scan }) {
   );
 }
 
-function ImproveResumePanel({
-  bulletAnalysis,
-  profileAnalysis,
-  isOptimising,
-  isOptimisingProfile,
-  onOptimiseBullets,
-  onOptimiseProfile,
-  motivationNote,
-  onMotivationNoteChange
-}) {
+function AtsBulletsPanel({ bulletAnalysis, isOptimising, onOptimiseBullets }) {
   return (
-    <section className="improve-panel" aria-label="Improve Resume">
-      <div>
-        <p className="panel-label">Next step</p>
-        <h2>Improve Resume</h2>
-        <p>
-          Strengthen the first-page positioning and the detailed bullet evidence
-          before submitting.
-        </p>
+    <section className="module-panel" aria-label="ATS and bullet optimiser">
+      <div className="module-panel-header">
+        <div>
+          <p className="panel-label">ATS + Bullets</p>
+          <h2>Optimise Bullet Points / Keywords</h2>
+          <p>
+            Find job ad keywords, weak bullets, and truthful as-is/to-be
+            rewrites.
+          </p>
+        </div>
+        <button
+          className="analyse-button"
+          disabled={isOptimising}
+          onClick={onOptimiseBullets}
+          type="button"
+        >
+          <ArrowRight size={18} aria-hidden="true" />
+          {bulletAnalysis ? "Re-run Bullet Optimiser" : "Optimise Bullets"}
+        </button>
       </div>
 
-      <div className="improve-actions">
-        <article className="improve-action-card">
-          <div>
-            <span className="part-label">Part 1</span>
-            <h3>Optimise Bullet Points / Keywords</h3>
-            <p>
-              Find job ad keywords, weak bullets, and truthful as-is/to-be
-              rewrites.
-            </p>
-          </div>
-          <button
-            className="analyse-button"
-            disabled={isOptimising}
-            onClick={onOptimiseBullets}
-            type="button"
-          >
-            <ArrowRight size={18} aria-hidden="true" />
-            {bulletAnalysis ? "Re-run Bullet Optimiser" : "Optimise Bullets"}
-          </button>
-        </article>
+      {bulletAnalysis ? <BulletOptimiserResults analysis={bulletAnalysis} /> : null}
+    </section>
+  );
+}
 
-        <article className="improve-action-card">
-          <div>
-            <span className="part-label">Part 2</span>
-            <h3>Optimise Profile + Key Capabilities</h3>
-            <p>
-              Make the top of the resume mirror the recruiter target in the
-              first 5 seconds.
-            </p>
-            <label className="mini-field">
-              <span>Optional motivation note</span>
-              <textarea
-                value={motivationNote || ""}
-                onChange={(event) => onMotivationNoteChange?.(event.target.value)}
-                placeholder="Example: I am interested in this role because..."
-              />
-            </label>
-          </div>
-          <button
-            className="analyse-button secondary"
-            disabled={isOptimisingProfile}
-            onClick={onOptimiseProfile}
-            type="button"
-          >
-            <ArrowRight size={18} aria-hidden="true" />
-            {profileAnalysis ? "Re-run Profile Optimiser" : "Optimise Profile"}
-          </button>
-        </article>
+function ProfileCapabilitiesPanel({
+  isOptimisingProfile,
+  motivationNote,
+  onMotivationNoteChange,
+  onOptimiseProfile,
+  onPriorityRequirementsChange,
+  profileAnalysis,
+  priorityRequirements
+}) {
+  return (
+    <section className="module-panel" aria-label="Profile and key capabilities">
+      <div className="module-panel-header">
+        <div>
+          <p className="panel-label">Profile + Key Capabilities</p>
+          <h2>Optimise Profile + Key Capabilities</h2>
+          <p>
+            Make the top of the resume mirror the recruiter target in the first
+            5 seconds.
+          </p>
+          <label className="mini-field">
+            <span>What they're looking for</span>
+            <textarea
+              value={priorityRequirements || ""}
+              onChange={(event) => onPriorityRequirementsChange?.(event.target.value)}
+              placeholder="Paste the job ad's 'What we're looking for' section or the must-have requirements..."
+            />
+          </label>
+          <label className="mini-field">
+            <span>Optional motivation note</span>
+            <textarea
+              value={motivationNote || ""}
+              onChange={(event) => onMotivationNoteChange?.(event.target.value)}
+              placeholder="Example: I am interested in this role because..."
+            />
+          </label>
+        </div>
+        <button
+          className="analyse-button secondary"
+          disabled={isOptimisingProfile}
+          onClick={onOptimiseProfile}
+          type="button"
+        >
+          <ArrowRight size={18} aria-hidden="true" />
+          {profileAnalysis ? "Re-run Profile Optimiser" : "Optimise Profile"}
+        </button>
       </div>
 
       {profileAnalysis ? <ProfileOptimiserResults analysis={profileAnalysis} /> : null}
-      {bulletAnalysis ? <BulletOptimiserResults analysis={bulletAnalysis} /> : null}
     </section>
   );
 }
@@ -733,6 +834,11 @@ function ProfileOptimiserResults({ analysis }) {
                   <strong>{capability.capability}</strong>
                   <p>{capability.suggestedWording}</p>
                   <small>{capability.reason}</small>
+                  <EvidenceNotes
+                    boundaryCheck={capability.boundaryCheck}
+                    evidenceSource={capability.evidenceSource}
+                    evidenceUsed={capability.evidenceUsed}
+                  />
                 </div>
               </div>
             ))}
@@ -745,16 +851,16 @@ function ProfileOptimiserResults({ analysis }) {
   );
 }
 
-function SubmitPanel({ contactNote, isGeneratingContactNote, onGenerateContactNote }) {
+function FollowUpPanel({ contactNote, isGeneratingContactNote, onGenerateContactNote }) {
   return (
-    <section className="submit-panel" aria-label="Submit and follow up">
-      <div className="submit-panel-header">
+    <section className="module-panel" aria-label="Follow-up">
+      <div className="module-panel-header">
         <div>
-          <p className="panel-label">Submit</p>
-          <h2>Short Hiring Team Contact Note</h2>
+          <p className="panel-label">Follow-up</p>
+          <h2>Hiring Manager Outreach Message</h2>
           <p>
-            Use this when you can see someone on the hiring team and want to
-            gently mention that you have applied.
+            Use this after applying when you can see someone on the hiring
+            team and want to put a human face to the application.
           </p>
         </div>
         <button
@@ -764,7 +870,7 @@ function SubmitPanel({ contactNote, isGeneratingContactNote, onGenerateContactNo
           type="button"
         >
           <ArrowRight size={18} aria-hidden="true" />
-          {contactNote ? "Re-run Contact Note" : "Generate Contact Note"}
+          {contactNote ? "Re-run Outreach Message" : "Generate Outreach Message"}
         </button>
       </div>
 
@@ -775,18 +881,18 @@ function SubmitPanel({ contactNote, isGeneratingContactNote, onGenerateContactNo
 
 function ContactNoteResults({ note }) {
   return (
-    <ResultCard title="Paste-ready LinkedIn note" wide>
+    <ResultCard title="Paste-ready LinkedIn message" wide>
       <div className="contact-note">
         <p>{note.shortNote}</p>
       </div>
 
       <div className="profile-answers">
         <div>
-          <span className="bullet-label">Why me</span>
+          <span className="bullet-label">Aligned experience</span>
           <p>{note.whyMeLine}</p>
         </div>
         <div>
-          <span className="bullet-label">Why them</span>
+          <span className="bullet-label">Role need</span>
           <p>{note.whyThemLine}</p>
         </div>
         <div>
@@ -813,25 +919,42 @@ function BulletOptimiserResults({ analysis }) {
               <span className={`status ${getKeywordStatusClass(keyword.resumeStatus)}`}>
                 {keyword.resumeStatus}
               </span>
+              <small className="keyword-context">
+                {keyword.knownContextSupport}
+                {keyword.contextUsed && keyword.contextUsed !== "None"
+                  ? `: ${keyword.contextUsed}`
+                  : ""}
+              </small>
             </div>
           ))}
         </div>
       </ResultCard>
 
-      <ResultCard title="Recommended As-Is To-Be Changes" wide>
+      <ResultCard title="Recommended Bullet Changes" wide>
         <div className="bullet-list">
           {analysis.weakestBullets.map((bullet) => (
-            <article className="bullet-card" key={bullet.originalBullet}>
+            <article className="bullet-card" key={`${bullet.action}-${bullet.originalBullet}-${bullet.rewrittenBullet}`}>
+              <span className={`status ${getBulletActionClass(bullet.action)}`}>
+                {bullet.action}
+              </span>
+              {bullet.action === "Add" ? null : (
+                <div>
+                  <span className="bullet-label">Original bullet</span>
+                  <p className="original-bullet">{bullet.originalBullet}</p>
+                </div>
+              )}
               <div>
-                <span className="bullet-label">Original bullet</span>
-                <p className="original-bullet">{bullet.originalBullet}</p>
-              </div>
-              <div>
-                <span className="bullet-label">Change to</span>
+                <span className="bullet-label">
+                  {bullet.action === "Add" ? "Add this bullet" : "Change to"}
+                </span>
                 <p className="rewritten-bullet">{bullet.rewrittenBullet}</p>
               </div>
               <KeywordList items={bullet.targetKeywords} />
               <p>{bullet.whyThisHelps}</p>
+              <EvidenceNotes
+                boundaryCheck={bullet.boundaryCheck}
+                evidenceUsed={bullet.evidenceUsed}
+              />
               <p className="truth-note">{bullet.truthfulnessNote}</p>
             </article>
           ))}
@@ -841,6 +964,70 @@ function BulletOptimiserResults({ analysis }) {
       <ResultCard title="Top Fixes" wide>
         <IconList icon={<CheckCircle2 size={18} />} items={analysis.topFixes} />
       </ResultCard>
+    </div>
+  );
+}
+
+function SuggestedFixes({ items }) {
+  return (
+    <div className="suggested-fixes">
+      {items.map((fix) => {
+        if (typeof fix === "string") {
+          return (
+            <article className="fix-card" key={fix}>
+              <span className="status reword">Fix</span>
+              <p>{fix}</p>
+            </article>
+          );
+        }
+
+        return (
+          <article className="fix-card" key={`${fix.applyTo}-${fix.issue}`}>
+            <div className="fix-card-header">
+              <span className={`status ${getSuggestionAreaClass(fix.applyTo)}`}>
+                {fix.applyTo}
+              </span>
+              <strong>{fix.issue}</strong>
+            </div>
+            <div>
+              <span className="bullet-label">Example</span>
+              <p className="rewritten-bullet">{fix.exampleWording}</p>
+            </div>
+            <p>{fix.whyThisHelps}</p>
+            <EvidenceNotes
+              boundaryCheck={fix.boundaryCheck}
+              evidenceUsed={fix.evidenceUsed}
+            />
+            <p className="truth-note">{fix.truthfulnessNote}</p>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function EvidenceNotes({ boundaryCheck, evidenceSource, evidenceUsed }) {
+  if (!boundaryCheck && !evidenceSource && !evidenceUsed) {
+    return null;
+  }
+
+  return (
+    <div className="evidence-notes">
+      {evidenceSource ? (
+        <p>
+          <strong>Source:</strong> {evidenceSource}
+        </p>
+      ) : null}
+      {evidenceUsed ? (
+        <p>
+          <strong>Evidence used:</strong> {evidenceUsed}
+        </p>
+      ) : null}
+      {boundaryCheck ? (
+        <p>
+          <strong>Scope check:</strong> {boundaryCheck}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -978,6 +1165,100 @@ function getFriendlyRequestError(error) {
   return message || "Something went wrong while running the analysis.";
 }
 
+function getRecommendedActionTitle({
+  fitAnalysis,
+  bulletAnalysis,
+  profileAnalysis,
+  contactNote
+}) {
+  if (!fitAnalysis) {
+    return "Choose the module you need";
+  }
+
+  if (!profileAnalysis) {
+    return "Tighten the first page next";
+  }
+
+  if (!bulletAnalysis) {
+    return "Support the profile with stronger bullets";
+  }
+
+  if (!contactNote) {
+    return "Prepare a hiring manager outreach message";
+  }
+
+  return "Ready for this application";
+}
+
+function getRecommendedActionText({
+  fitAnalysis,
+  bulletAnalysis,
+  profileAnalysis,
+  contactNote
+}) {
+  if (!fitAnalysis) {
+    return "Run Fit Check for a diagnostic, or go straight to ATS + Bullets or Profile + Key Capabilities if you already know the role fits.";
+  }
+
+  if (!profileAnalysis) {
+    return "Fit Check is done. Use Profile + Key Capabilities to make the top of the resume match what the recruiter is looking for.";
+  }
+
+  if (!bulletAnalysis) {
+    return "The top-page positioning is drafted. Use ATS + Bullets so the detailed experience supports that positioning.";
+  }
+
+  if (!contactNote) {
+    return "Resume improvements are ready. Use Follow-up to draft a human LinkedIn message for the hiring manager after applying.";
+  }
+
+  return "You have a fit read, resume improvements, and a follow-up note. Re-run any module whenever the resume or job ad changes.";
+}
+
+function getRecommendedAction({
+  fitAnalysis,
+  bulletAnalysis,
+  profileAnalysis,
+  contactNote,
+  isAnalysing,
+  onFitCheck
+}) {
+  if (!fitAnalysis) {
+    return {
+      disabled: isAnalysing,
+      icon: Sparkles,
+      label: isAnalysing ? "Checking..." : "Start Fit Check",
+      onClick: onFitCheck
+    };
+  }
+
+  if (!profileAnalysis) {
+    return {
+      icon: ArrowRight,
+      label: "Go to Profile + Key Capabilities",
+      module: "Profile + Key Capabilities"
+    };
+  }
+
+  if (!bulletAnalysis) {
+    return {
+      icon: ArrowRight,
+      label: "Go to ATS + Bullets",
+      module: "ATS + Bullets"
+    };
+  }
+
+  if (!contactNote) {
+    return {
+      icon: ArrowRight,
+      label: "Go to Follow-up",
+      module: "Follow-up"
+    };
+  }
+
+  return null;
+}
+
 function getStatusClass(status) {
   if (status === "Strong" || status === "Ready to submit") return "strong";
   if (status === "Needs work") return "needs-work";
@@ -1007,6 +1288,18 @@ function getCapabilityActionClass(action) {
   if (action === "Add") return "add";
   if (action === "Reword") return "reword";
   return "remove";
+}
+
+function getBulletActionClass(action) {
+  if (action === "Add") return "add";
+  return "reword";
+}
+
+function getSuggestionAreaClass(area) {
+  if (area === "Profile" || area === "Key Capabilities") return "add";
+  if (area === "Bullet") return "reword";
+  if (area === "Follow-up") return "keep";
+  return "weak";
 }
 
 function getKeywordStatusClass(status) {

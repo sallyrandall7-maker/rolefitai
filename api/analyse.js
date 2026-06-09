@@ -21,6 +21,8 @@ export default async function handler(request, response) {
     const resume = String(request.body?.resume || "").trim();
     const jobDescription = String(request.body?.jobDescription || "").trim();
     const motivationNote = String(request.body?.motivationNote || "").trim();
+    const priorityRequirements = String(request.body?.priorityRequirements || "").trim();
+    const knownContext = String(request.body?.knownContext || "").trim();
     const analysisType = String(request.body?.analysisType || "roleMatch");
 
     if (!resume || !jobDescription) {
@@ -42,6 +44,8 @@ export default async function handler(request, response) {
       resume,
       jobDescription,
       motivationNote,
+      priorityRequirements,
+      knownContext,
       analysisType
     });
 

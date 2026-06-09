@@ -12,14 +12,22 @@ resume and job description into a practical Apply Today workflow.
 - The local server safely calls the OpenAI API using the key in `.env`.
 - Includes a **Fit Check** for application readiness, ATS match, missing areas,
   and a job-ad-specific recruiter 8-second scan.
-- Includes an **Improve Resume** path split into bullet/keyword optimisation
-  and profile/key capabilities optimisation.
+- Includes separate **ATS + Bullets** and **Profile + Key Capabilities**
+  modules so each improvement path can be used on its own.
+- Includes a shared **Known experience or keywords to consider** box for
+  truthful capabilities that are relevant but not obvious in the resume yet.
+- Fit Check is recommended but optional. You can start with any module, then
+  run or re-run Fit Check later.
+- For now, re-review is handled by pasting the updated resume back into the
+  resume box and re-running Fit Check.
 - Bullet rewrites use a clear what/how/so-what structure, such as
   `Delivered X by Y, resulting in Z`, while staying truthful.
-- Profile optimisation can use an optional motivation note to make the
-  About Me/Profile section more personal.
-- Includes a short hiring team contact note for LinkedIn after applying,
-  written in a human tone without pushy action requests.
+- Profile optimisation can use an optional **What they're looking for** input
+  to prioritise the most important job requirements, plus an optional
+  motivation note to make the About Me/Profile section more personal.
+- Includes a **Follow-up** module for a hiring manager LinkedIn outreach
+  message after applying, written in a human tone without pushy action
+  requests.
 
 ## How To Run It
 
@@ -195,7 +203,10 @@ This is the main screen. It contains:
 - the resume textarea
 - the `.docx` resume upload control
 - the job description textarea
-- the Start Fit Check button
+- the known experience or keywords textarea
+- the Profile module's optional What they're looking for textarea
+- the module buttons for Fit Check, ATS + Bullets, Profile + Key Capabilities,
+  and Follow-up
 - loading and error states
 - the results area
 

@@ -32,6 +32,11 @@ Most tools use the same two inputs:
 
 - Resume
 - Job description
+- Optional known experience or keywords to consider
+
+The Profile + Key Capabilities module may also use:
+
+- Optional priority requirements / "What they're looking for"
 
 The resume input should support:
 
@@ -48,6 +53,13 @@ Later interview tools may add:
 - Interview question
 - Tone or seniority preference
 
+The optional known experience or keywords input is for truthful capabilities that may not be obvious in the resume yet. For example, if MDM, data governance, or vendor management is relevant to the job ad and genuinely part of the candidate's experience, the user can add it there so the AI can suggest where to weave it into bullets, key capabilities, or profile wording without inventing evidence.
+
+Known experience must stay within the exact scope the user supplied. For example:
+
+- "Built my own personal AI app using OpenAI Codex" can support a modest AI tooling or hands-on AI experimentation line, but must not become enterprise AI platform leadership.
+- "Mentored a senior product owner" can support transferable mentoring or product leadership language, but must not become direct Delivery Lead management.
+
 ## Core Principles
 
 - Keep the app beginner-friendly.
@@ -61,7 +73,7 @@ Later interview tools may add:
 
 ### 1. ATS Match & Gap Analysis Agent
 
-Status: Next priority
+Status: Built in Fit Check module
 
 Purpose: Determine whether the resume is likely to pass ATS screening and identify missing keywords, skills, experience areas, and risks.
 
@@ -69,6 +81,7 @@ Inputs:
 
 - Resume
 - Job description
+- Optional priority requirements / "What they're looking for"
 
 Outputs:
 
@@ -87,6 +100,13 @@ Outputs:
 - Generic or weak resume sections
 - Likelihood of passing ATS
 - Specific recommendations to improve ATS performance
+- Recommended fixes with example wording, where to apply the fix, why it helps, and a truthfulness note
+
+Rules:
+
+- ATS and application readiness scores must be based on the resume as written.
+- Optional known experience or keywords can inform suggestions, but should not inflate the ATS score unless the content is already visible in the resume.
+- Recommended fixes should show the evidence used and a scope check when optional known experience informs the example wording.
 
 User question answered:
 
@@ -96,7 +116,7 @@ Will my resume pass screening for this role, and what is missing?
 
 ### 2. Recruiter 8-Second Scan Agent
 
-Status: Next priority
+Status: Built in Fit Check module
 
 Purpose: Simulate how a recruiter would review the resume during a very fast first pass while looking for the specific requirements in the job ad.
 
@@ -143,7 +163,7 @@ Would a recruiter looking at this specific job ad keep reading this resume?
 
 ### 3. Executive Profile Generator Agent
 
-Status: Planned for Apply Today workflow
+Status: Built as Profile + Key Capabilities module
 
 Purpose: Create a strong top-of-resume profile tailored to the target role.
 
@@ -161,11 +181,15 @@ Outputs:
 
 Rules:
 
-- Keep the executive summary to 4-6 lines maximum.
-- Immediately establish seniority.
-- Highlight relevant experience.
-- Include platform ownership and leadership where supported.
-- Include scale, budgets, customers, teams, or platforms where supported.
+- Use a recruiter, hiring manager, and ATS reviewer lens.
+- Do not create a generic professional summary.
+- If priority requirements are supplied, treat them as the main target and use the full job description as supporting context.
+- The first sentence must immediately establish the candidate as a match for the role.
+- Prioritise hard-to-find requirements and map them to actual candidate evidence.
+- Every sentence should answer: "Why should I interview this person?"
+- Focus on ownership, outcomes, scale, complexity, technical fluency, stakeholder influence, commercial outcomes, leadership, and operating model impact where supported.
+- If the candidate lacks a requirement, identify the closest credible equivalent rather than inventing experience.
+- Avoid buzzwords, cliches, corporate jargon, and first-person phrasing.
 
 User question answered:
 
@@ -175,7 +199,7 @@ How should I position myself at the top of my resume?
 
 ### 4. Resume Bullet Optimisation Agent
 
-Status: Planned for Apply Today workflow
+Status: Built as ATS + Bullets module
 
 Purpose: Improve weak resume bullet points so they are clearer, more outcome-focused, and better aligned to the role.
 
@@ -195,6 +219,7 @@ Outputs:
 - Bullets lacking measurable results
 - Original bullet
 - Improved bullet
+- Add a new bullet when the keyword is truthful but not currently visible in a useful existing bullet
 - Keywords added or strengthened
 - Reason for change
 - Truthfulness note
@@ -211,6 +236,12 @@ Rules:
 - Quantify achievements only where evidence exists.
 - Preserve factual accuracy.
 - If an important job-ad keyword is not supported by the resume, show it as a gap rather than forcing it into a rewrite.
+- If an important job-ad keyword is supported by optional known experience but not visible in the resume, mark it as missing or weak in the resume and suggest a truthful Add bullet or capability.
+- The ATS keyword status must be based on the resume as written, not on optional known experience.
+- Added bullets should show the evidence used and a scope check so the user can confirm the wording does not overclaim.
+- For Key Capabilities, Keep and Reword should only be used when the current Key Capabilities section already contains the same or closely related capability line.
+- If capability evidence appears elsewhere in the resume, such as role detail, profile/about me, or career summary, the action should be Add because it is not currently visible in Key Capabilities.
+- Each key capability suggestion should show its evidence source. Keep and Reword must use Current Key Capabilities as the evidence source.
 
 User question answered:
 
@@ -218,17 +249,24 @@ User question answered:
 Which resume bullets should I improve before I apply?
 ```
 
-### 5. Resume Re-Review Agent
+### 5. Review Agent
 
-Status: Planned for Apply Today workflow
+Status: Next phase, not built yet
 
-Purpose: Compare the original and revised resume against the target job description to confirm whether the changes improved the application.
+Purpose: Compare an updated resume against the earlier fit read and target job description to show whether the application has improved.
+
+Near-term decision:
+
+- Do not build this as a separate Phase 1 module yet.
+- For now, the user can paste the revised resume back into the resume box and re-run Fit Check.
+- A dedicated Review module should come next if the current Fit Check, ATS + Bullets, and Profile + Key Capabilities refinements test well.
 
 Inputs:
 
 - Original resume
 - Revised resume
 - Job description
+- Earlier Fit Check result where available
 
 Outputs:
 
@@ -237,7 +275,10 @@ Outputs:
 - Recruiter appeal improvement
 - Hiring manager appeal improvement
 - Keyword coverage improvement
-- Interview conversion likelihood
+- Clear comparison notes, such as "ATS is stronger because the updated resume now includes X"
+- Missing keywords that are no longer missing
+- Remaining missing or weak keywords
+- Recruiter decision movement, such as Maybe to Shortlist
 - Remaining gaps
 - Remaining risks
 - Final recommendation
@@ -246,7 +287,7 @@ Outputs:
 User question answered:
 
 ```text
-Is this revised resume now strong enough to submit?
+Is this updated resume stronger than the previous version, and what still needs work?
 ```
 
 ### 6. Cover Letter Generator
@@ -354,18 +395,17 @@ Priority:
 2. Recruiter 8-Second Scan Agent
 3. Executive Profile Generator Agent
 4. Resume Bullet Optimisation Agent
-5. Resume Re-Review Agent
+5. Review Agent next phase, only after the current modules test well
 
 Ideal user flow:
 
 ```text
 Paste resume + job description
-Run ATS Match & Gap Analysis
-Run Recruiter 8-Second Scan
+Run Fit Check if needed
 Generate executive profile
 Optimise resume bullets
 Paste revised resume
-Run Resume Re-Review
+Re-run Fit Check if needed
 Apply
 ```
 
@@ -393,26 +433,25 @@ Priority:
 
 ## Recommended App Journey
 
-The app should feel like a guided job application workspace, not a collection of disconnected prompts.
+The app should feel like an interconnected job application desk. The user should be able to start with the module they need, while still seeing a recommended next action when helpful.
 
-### Step 1: Start Application
+### Shared Inputs
 
 The user adds:
 
 - Resume
 - Job description
+- Optional known experience or keywords to consider
 
-For the resume, the user can either paste text or upload a `.docx` file. Upload should extract the resume text into the app so the user can review it before running analysis.
+For the resume, the user can either paste text or upload a `.docx` file. Upload should extract the resume text into the app so the user can review and edit it before running analysis.
 
-The app shows a clear primary action:
+The optional known experience or keywords box lets the user add truthful capabilities that the resume may not show clearly yet. The AI can then suggest where those capabilities belong, such as a rewritten bullet, a key capability, or the profile/about me section.
 
-```text
-Start Fit Check
-```
+### Module 1: Fit Check
 
-### Step 2: Fit Check
+Fit Check is recommended but not mandatory. The user can run or re-run it whenever they want a diagnostic.
 
-The app runs the first two decision tools:
+Fit Check includes:
 
 - ATS Match & Gap Analysis
 - Recruiter 8-Second Scan
@@ -425,18 +464,13 @@ The user sees:
 - What the recruiter is looking for in this specific job ad
 - What the recruiter would quickly see in the resume
 - Whether the resume currently reads as Reject, Maybe, Shortlist, Strong Shortlist, or Must Screen
-- The next best action in the Apply Today workflow
+- A recommended next action
 
-### Step 3: Improve Resume
+### Module 2: ATS + Bullets
 
-The app offers focused next actions:
+The ATS + Bullets module helps the user strengthen job-ad keyword coverage and weaker resume bullets.
 
-- Part 1: Optimise Bullet Points / Keywords
-- Part 2: Optimise Profile + Key Capabilities
-
-The user can copy improved sections into their resume.
-
-Part 1, Resume Bullet Optimiser, should show:
+It should show:
 
 - Job ad keyword
 - Resume status: Found, Weak, or Missing
@@ -446,64 +480,56 @@ Part 1, Resume Bullet Optimiser, should show:
 - Keywords added or strengthened
 - Truthfulness note
 
-This step should answer:
+This module should answer:
 
 ```text
 What exact resume text should I change before I apply?
 ```
 
-Part 2, Profile + Key Capabilities Optimiser, should show:
+### Module 3: Profile + Key Capabilities
+
+The Profile + Key Capabilities module helps the top of the resume mirror the recruiter's target in the first 5 seconds.
+
+It should show:
 
 - Recruiter target summary from the job ad
+- Optional "What they're looking for" input to prioritise the most important job requirements
 - Current top-section read
-- Paste-ready profile/about me paragraph that integrates: Why me, what problem I solve for the employer, and my motivation
+- Paste-ready profile/about me section that is optimised for a recruiter spending 3-8 seconds scanning the resume
+- Paste-ready profile/about me should integrate: Why me, what problem I solve for the employer, and my motivation
 - Paste-ready profile/about me should avoid dash punctuation because it sounds too AI-generated.
 - Supporting explanation fields showing how the paragraph answers: Why me, problem I solve, and motivation
 - Why the improved profile works
 - Key capabilities to keep, add, reword, or remove
+- Evidence used and scope check for each key capability, especially where the action is Reword
+- Evidence source for each key capability, so the user can see whether it came from Current Key Capabilities, role details, profile/about me, career summary, known context, or a job description gap
 - Top-section gaps that should show faster
 - Truthfulness note
 - Optional user motivation note, used only when supplied
 - Precise experience-duration wording. For example, do not turn "16+ years in technology delivery across various roles" into "16+ years in platform ownership" unless the resume clearly supports that exact scope.
 
-This step should answer:
+This module should answer:
 
 ```text
 Does the top of my resume quickly say the same thing the recruiter is looking for?
 ```
 
-### Step 4: Re-Review
+### Module 4: Follow-up
 
-The user pastes the revised resume.
+The Follow-up module generates a hiring manager outreach message for LinkedIn when the user can see someone on the hiring team.
 
-The app compares:
-
-- Original resume
-- Revised resume
-- Job description
-
-The user sees:
-
-- Before vs after score
-- Remaining gaps
-- Remaining risks
-- Final recommendation
-
-### Step 5: Submit
-
-The app can generate:
-
-- Short hiring team contact note for LinkedIn when the user can see someone on the hiring team
-
-The short contact note should:
+The hiring manager outreach message should:
 
 - Say the user has applied
-- Include a brief why-me line based on the resume and job ad
-- Include why the user would love the role or team
-- Thank them for considering the application
+- Be 150-250 words
+- Feel human and conversational
+- Show that the candidate understands what the company is really looking for
+- Connect the candidate's experience to the role's underlying needs
+- Prioritise mindset fit, operating style fit, problem-solving approach, and leadership style before relevant experience
+- Avoid sounding like a cover letter or rewritten resume
+- End by putting a face to the application
 - Avoid forcing action or asking for a referral, call, meeting, or response
-- Be short enough for a LinkedIn message
-- Use a human tone
+- Avoid generic lines such as "I am passionate about" or "I have extensive experience"
 - Avoid dash punctuation
 
 Later the app can also generate:
@@ -512,7 +538,29 @@ Later the app can also generate:
 - Short email
 - Recruiter message variants
 
-### Step 6: Prepare For Interview
+### Review Module
+
+Next phase, not built yet.
+
+For the immediate version, the user can:
+
+- Paste the revised resume into the resume input
+- Re-run Fit Check
+- Use the updated ATS match, recruiter scan, missing areas, and next action as the practical re-review
+
+Later, a dedicated Review module may compare:
+
+- Original resume
+- Revised resume
+- Job description
+- Before vs after score
+- ATS and recruiter decision movement
+- Missing keywords that are now covered
+- Remaining gaps
+- Remaining risks
+- Final recommendation
+
+### Interview Prep
 
 Later, the app can move from application mode into interview mode:
 
@@ -523,7 +571,7 @@ Later, the app can move from application mode into interview mode:
 
 ## UI Look And Feel Options
 
-### Option A: Guided Workflow
+### Option A: Guided Modules
 
 Best for: applying today with low overwhelm.
 
@@ -531,13 +579,13 @@ Layout:
 
 ```text
 Header
-Progress steps: Fit Check -> Improve Resume -> Re-Review -> Submit
+Modules: Fit Check -> ATS + Bullets -> Profile + Key Capabilities -> Follow-up
 
 Resume input | Job description input
 
 Recommended next action
 Results
-Continue to Improve Resume
+Recommended next action
 ```
 
 Feel:
@@ -567,7 +615,7 @@ Choose tool:
 [Recruiter Scan]
 [Profile Generator]
 [Bullet Optimiser]
-[Re-Review]
+[Review]
 
 Results
 ```
@@ -610,17 +658,25 @@ Tradeoff:
 
 ## Current UI Recommendation
 
-Start with Option A: Guided Workflow.
+Use a modular application desk with light guidance.
 
-Use a simple step-based journey:
+Top modules:
 
 1. Fit Check
-2. Improve Resume
-3. Re-Review
-4. Submit
-5. Interview Prep later
+2. ATS + Bullets
+3. Profile + Key Capabilities
+4. Follow-up
 
-This keeps the first version practical for applying today while leaving room to add a fuller dashboard later.
+Fit Check should be recommended but not mandatory. The user can:
+
+- Start with any module
+- Use Fit Check as a diagnostic
+- Use ATS + Bullets when they already know the role fits and want keyword/bullet help
+- Use Profile + Key Capabilities when they want the top of the resume to match the recruiter target
+- Use Follow-up after applying when they can see someone on the hiring team
+- Re-run any module after editing the resume, job description, motivation note, or known experience/keywords
+
+The app should keep a Recommended next action panel, but it should guide rather than lock the user into a workflow.
 
 ## Mobile And Upload Requirements
 
