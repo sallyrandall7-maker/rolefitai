@@ -2,12 +2,14 @@ import {
   bulletOptimiserInstructions,
   buildAnalysisInput,
   contactNoteInstructions,
+  interviewPrepInstructions,
   profileOptimiserInstructions,
   roleMatchInstructions
 } from "./analysisPrompt.js";
 import {
   bulletOptimiserSchema,
   contactNoteSchema,
+  interviewPrepSchema,
   profileOptimiserSchema,
   roleMatchSchema
 } from "./analysisSchema.js";
@@ -37,6 +39,12 @@ const analysisConfigs = {
     schema: contactNoteSchema,
     schemaName: "rolefit_contact_note",
     maxOutputTokens: 1800
+  },
+  interviewPrep: {
+    instructions: interviewPrepInstructions,
+    schema: interviewPrepSchema,
+    schemaName: "rolefit_interview_prep",
+    maxOutputTokens: 3600
   }
 };
 
@@ -47,6 +55,8 @@ export async function requestOpenAiAnalysis({
   motivationNote = "",
   priorityRequirements = "",
   knownContext = "",
+  companyName = "",
+  interviewerName = "",
   analysisType = "roleMatch"
 }) {
   const config = analysisConfigs[analysisType] || analysisConfigs.roleMatch;
@@ -65,7 +75,9 @@ export async function requestOpenAiAnalysis({
         jobDescription,
         motivationNote,
         priorityRequirements,
-        knownContext
+        knownContext,
+        companyName,
+        interviewerName
       }),
       max_output_tokens: config.maxOutputTokens,
       reasoning: {

@@ -18,8 +18,18 @@ import { sampleJobDescription, sampleResume } from "./sampleData.js";
 const API_URL = import.meta.env.PROD
   ? "/api/analyse"
   : "http://127.0.0.1:8787/api/analyse";
+const ACCESS_URL = import.meta.env.PROD
+  ? "/api/access"
+  : "http://127.0.0.1:8787/api/access";
+const ACCESS_CODE_STORAGE_KEY = "sallyCareerCoachAccessCode";
 
-const moduleTabs = ["Fit Check", "ATS + Bullets", "Profile + Key Capabilities", "Follow-up"];
+const moduleTabs = [
+  "Fit Check",
+  "ATS + Bullets",
+  "Profile + Key Capabilities",
+  "Follow-up",
+  "Interview Prep"
+];
 const loadingSteps = [
   "Reading the resume",
   "Scanning the job description",
@@ -48,6 +58,13 @@ const contactNoteLoadingSteps = [
   "Writing the outreach message",
   "Checking tone and length"
 ];
+const interviewPrepLoadingSteps = [
+  "Reading the role context",
+  "Reviewing company signals",
+  "Finding your strongest angle",
+  "Drafting your opening answer",
+  "Preparing likely questions"
+];
 
 function App() {
   const [resume, setResume] = useState("");
@@ -56,19 +73,30 @@ function App() {
   const [bulletAnalysis, setBulletAnalysis] = useState(null);
   const [profileAnalysis, setProfileAnalysis] = useState(null);
   const [contactNote, setContactNote] = useState(null);
+  const [interviewPrep, setInterviewPrep] = useState(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
   const [isOptimising, setIsOptimising] = useState(false);
   const [isOptimisingProfile, setIsOptimisingProfile] = useState(false);
   const [isGeneratingContactNote, setIsGeneratingContactNote] = useState(false);
+  const [isPreparingInterview, setIsPreparingInterview] = useState(false);
   const [loadingStepIndex, setLoadingStepIndex] = useState(0);
   const [error, setError] = useState("");
   const [uploadMessage, setUploadMessage] = useState("");
   const [motivationNote, setMotivationNote] = useState("");
   const [priorityRequirements, setPriorityRequirements] = useState("");
   const [knownContext, setKnownContext] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [interviewerName, setInterviewerName] = useState("");
+  const [accessCode, setAccessCode] = useState(() =>
+    window.localStorage.getItem(ACCESS_CODE_STORAGE_KEY) || ""
+  );
+  const [accessStatus, setAccessStatus] = useState(null);
+  const [isCheckingAccess, setIsCheckingAccess] = useState(false);
   const [activeStep, setActiveStep] = useState("Fit Check");
   const currentStep = activeStep;
-  const activeLoadingSteps = isGeneratingContactNote
+  const activeLoadingSteps = isPreparingInterview
+    ? interviewPrepLoadingSteps
+    : isGeneratingContactNote
     ? contactNoteLoadingSteps
     : isOptimisingProfile
     ? profileLoadingSteps
@@ -77,7 +105,13 @@ function App() {
       : loadingSteps;
 
   useEffect(() => {
-    if (!isAnalysing && !isOptimising && !isOptimisingProfile && !isGeneratingContactNote) {
+    if (
+      !isAnalysing &&
+      !isOptimising &&
+      !isOptimisingProfile &&
+      !isGeneratingContactNote &&
+      !isPreparingInterview
+    ) {
       setLoadingStepIndex(0);
       return undefined;
     }
@@ -94,8 +128,67 @@ function App() {
     isAnalysing,
     isOptimising,
     isOptimisingProfile,
-    isGeneratingContactNote
+    isGeneratingContactNote,
+    isPreparingInterview
   ]);
+
+  useEffect(() => {
+    const savedCode = window.localStorage.getItem(ACCESS_CODE_STORAGE_KEY);
+
+    if (savedCode) {
+      handleAccessCheck(savedCode, { silent: true });
+    }
+  }, []);
+
+  async function handleAccessCheck(codeToCheck = accessCode, options = {}) {
+    const trimmedCode = String(codeToCheck || "").trim();
+
+    if (!trimmedCode) {
+      setAccessStatus(null);
+      if (!options.silent) {
+        setError("Please enter an access code.");
+      }
+      return;
+    }
+
+    setError("");
+    setIsCheckingAccess(true);
+
+    try {
+      const response = await fetch(ACCESS_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          accessCode: trimmedCode
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setAccessStatus(data.accessStatus || null);
+        throw new Error(data.details || data.error || "The access code could not be checked.");
+      }
+
+      setAccessCode(trimmedCode);
+      window.localStorage.setItem(ACCESS_CODE_STORAGE_KEY, trimmedCode);
+      setAccessStatus(data.accessStatus || null);
+    } catch (requestError) {
+      if (!options.silent) {
+        setError(getFriendlyRequestError(requestError));
+      }
+    } finally {
+      setIsCheckingAccess(false);
+    }
+  }
+
+  function updateAccessStatusFromResponse(data) {
+    if (data?.accessStatus) {
+      setAccessStatus(data.accessStatus);
+    }
+  }
 
   async function handleDocxUpload(event) {
     const file = event.target.files?.[0];
@@ -136,6 +229,7 @@ function App() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
+          accessCode,
           resume,
           jobDescription,
           knownContext,
@@ -144,6 +238,7 @@ function App() {
       });
 
       const data = await response.json();
+      updateAccessStatusFromResponse(data);
 
       if (!response.ok) {
         throw new Error(data.details || data.error || "The Fit Check request failed.");
@@ -173,6 +268,7 @@ function App() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
+          accessCode,
           resume,
           jobDescription,
           knownContext,
@@ -181,6 +277,7 @@ function App() {
       });
 
       const data = await response.json();
+      updateAccessStatusFromResponse(data);
 
       if (!response.ok) {
         throw new Error(data.details || data.error || "The bullet optimiser request failed.");
@@ -209,6 +306,7 @@ function App() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
+          accessCode,
           resume,
           jobDescription,
           motivationNote,
@@ -219,6 +317,7 @@ function App() {
       });
 
       const data = await response.json();
+      updateAccessStatusFromResponse(data);
 
       if (!response.ok) {
         throw new Error(data.details || data.error || "The profile optimiser request failed.");
@@ -247,6 +346,7 @@ function App() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
+          accessCode,
           resume,
           jobDescription,
           motivationNote,
@@ -256,6 +356,7 @@ function App() {
       });
 
       const data = await response.json();
+      updateAccessStatusFromResponse(data);
 
       if (!response.ok) {
         throw new Error(data.details || data.error || "The outreach message request failed.");
@@ -270,15 +371,60 @@ function App() {
     }
   }
 
+  async function handleInterviewPrep() {
+    setError("");
+    setInterviewPrep(null);
+    setLoadingStepIndex(0);
+    setActiveStep("Interview Prep");
+    setIsPreparingInterview(true);
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          accessCode,
+          resume,
+          jobDescription,
+          motivationNote,
+          priorityRequirements,
+          knownContext,
+          companyName,
+          interviewerName,
+          analysisType: "interviewPrep"
+        })
+      });
+
+      const data = await response.json();
+      updateAccessStatusFromResponse(data);
+
+      if (!response.ok) {
+        throw new Error(data.details || data.error || "The interview prep request failed.");
+      }
+
+      setInterviewPrep(data);
+    } catch (requestError) {
+      setInterviewPrep(null);
+      setError(getFriendlyRequestError(requestError));
+    } finally {
+      setIsPreparingInterview(false);
+    }
+  }
+
   function handleNewRole() {
     setJobDescription("");
     setKnownContext("");
     setMotivationNote("");
     setPriorityRequirements("");
+    setCompanyName("");
+    setInterviewerName("");
     setFitAnalysis(null);
     setBulletAnalysis(null);
     setProfileAnalysis(null);
     setContactNote(null);
+    setInterviewPrep(null);
     setError("");
     setUploadMessage("");
     setLoadingStepIndex(0);
@@ -291,6 +437,7 @@ function App() {
     setBulletAnalysis(null);
     setProfileAnalysis(null);
     setContactNote(null);
+    setInterviewPrep(null);
     setError("");
     setUploadMessage("");
     setLoadingStepIndex(0);
@@ -312,6 +459,14 @@ function App() {
           </p>
         </div>
       </section>
+
+      <AccessPanel
+        accessCode={accessCode}
+        accessStatus={accessStatus}
+        isCheckingAccess={isCheckingAccess}
+        onAccessCodeChange={setAccessCode}
+        onCheckAccess={() => handleAccessCheck()}
+      />
 
       <ProgressSteps
         currentStep={currentStep}
@@ -401,6 +556,12 @@ function App() {
             loadingSteps={loadingSteps}
             title="Running Fit Check"
           />
+        ) : isPreparingInterview ? (
+          <LoadingResults
+            currentStepIndex={loadingStepIndex}
+            loadingSteps={interviewPrepLoadingSteps}
+            title="Preparing interview notes"
+          />
         ) : isGeneratingContactNote ? (
           <LoadingResults
             currentStepIndex={loadingStepIndex}
@@ -426,17 +587,24 @@ function App() {
             bulletAnalysis={bulletAnalysis}
             profileAnalysis={profileAnalysis}
             contactNote={contactNote}
+            interviewPrep={interviewPrep}
             isOptimising={isOptimising}
             isOptimisingProfile={isOptimisingProfile}
             isGeneratingContactNote={isGeneratingContactNote}
+            isPreparingInterview={isPreparingInterview}
             onOptimiseBullets={handleBulletOptimiser}
             onOptimiseProfile={handleProfileOptimiser}
             onGenerateContactNote={handleContactNote}
+            onPrepareInterview={handleInterviewPrep}
             onRunFitCheck={handleFitCheck}
             motivationNote={motivationNote}
             onMotivationNoteChange={setMotivationNote}
             priorityRequirements={priorityRequirements}
             onPriorityRequirementsChange={setPriorityRequirements}
+            companyName={companyName}
+            onCompanyNameChange={setCompanyName}
+            interviewerName={interviewerName}
+            onInterviewerNameChange={setInterviewerName}
           />
         )}
       </section>
@@ -458,6 +626,46 @@ function ProgressSteps({ steps, currentStep, onStepChange }) {
         </button>
       ))}
     </nav>
+  );
+}
+
+function AccessPanel({
+  accessCode,
+  accessStatus,
+  isCheckingAccess,
+  onAccessCodeChange,
+  onCheckAccess
+}) {
+  return (
+    <section className="access-panel" aria-label="Access code">
+      <div>
+        <p className="panel-label">Test access</p>
+        <div className="access-form">
+          <input
+            value={accessCode}
+            onChange={(event) => onAccessCodeChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                onCheckAccess();
+              }
+            }}
+            placeholder="Enter access code"
+            type="password"
+          />
+          <button
+            className="sample-button"
+            disabled={isCheckingAccess}
+            onClick={onCheckAccess}
+            type="button"
+          >
+            {isCheckingAccess ? "Checking..." : "Check"}
+          </button>
+        </div>
+      </div>
+      <div className={`access-status ${getAccessStatusClass(accessStatus)}`}>
+        {accessStatus?.message || "Enter your code to unlock AI tools"}
+      </div>
+    </section>
   );
 }
 
@@ -531,17 +739,24 @@ function ApplyTodayWorkspace({
   bulletAnalysis,
   profileAnalysis,
   contactNote,
+  interviewPrep,
   isOptimising,
   isOptimisingProfile,
   isGeneratingContactNote,
+  isPreparingInterview,
   onOptimiseBullets,
   onOptimiseProfile,
   onGenerateContactNote,
+  onPrepareInterview,
   onRunFitCheck,
   motivationNote,
   onMotivationNoteChange,
   priorityRequirements,
-  onPriorityRequirementsChange
+  onPriorityRequirementsChange,
+  companyName,
+  onCompanyNameChange,
+  interviewerName,
+  onInterviewerNameChange
 }) {
   if (activeStep === "ATS + Bullets") {
     return (
@@ -573,6 +788,20 @@ function ApplyTodayWorkspace({
         contactNote={contactNote}
         isGeneratingContactNote={isGeneratingContactNote}
         onGenerateContactNote={onGenerateContactNote}
+      />
+    );
+  }
+
+  if (activeStep === "Interview Prep") {
+    return (
+      <InterviewPrepPanel
+        companyName={companyName}
+        interviewPrep={interviewPrep}
+        interviewerName={interviewerName}
+        isPreparingInterview={isPreparingInterview}
+        onCompanyNameChange={onCompanyNameChange}
+        onInterviewerNameChange={onInterviewerNameChange}
+        onPrepareInterview={onPrepareInterview}
       />
     );
   }
@@ -922,6 +1151,133 @@ function ContactNoteResults({ note }) {
   );
 }
 
+function InterviewPrepPanel({
+  companyName,
+  interviewPrep,
+  interviewerName,
+  isPreparingInterview,
+  onCompanyNameChange,
+  onInterviewerNameChange,
+  onPrepareInterview
+}) {
+  return (
+    <section className="module-panel" aria-label="Interview prep">
+      <div className="module-panel-header">
+        <div>
+          <p className="panel-label">Interview Prep</p>
+          <h2>Prepare Your Interview Angle</h2>
+          <p>
+            Generate a role briefing, your opening answer, your USP, and likely
+            interview questions.
+          </p>
+          <div className="interview-inputs">
+            <label className="mini-field">
+              <span>Company name</span>
+              <input
+                value={companyName || ""}
+                onChange={(event) => onCompanyNameChange?.(event.target.value)}
+                placeholder="Example: Commonwealth Bank"
+                type="text"
+              />
+            </label>
+            <label className="mini-field">
+              <span>Optional interviewer name</span>
+              <input
+                value={interviewerName || ""}
+                onChange={(event) => onInterviewerNameChange?.(event.target.value)}
+                placeholder="Example: Jane Smith"
+                type="text"
+              />
+            </label>
+          </div>
+        </div>
+        <button
+          className="analyse-button"
+          disabled={isPreparingInterview}
+          onClick={onPrepareInterview}
+          type="button"
+        >
+          <ArrowRight size={18} aria-hidden="true" />
+          {interviewPrep ? "Re-run Interview Prep" : "Prepare Interview"}
+        </button>
+      </div>
+
+      {interviewPrep ? <InterviewPrepResults analysis={interviewPrep} /> : null}
+    </section>
+  );
+}
+
+function InterviewPrepResults({ analysis }) {
+  const context = analysis.companyContext || {};
+  const usp = analysis.usp || {};
+
+  return (
+    <div className="interview-results">
+      <ResultCard title="Company + Role Context" wide>
+        <div className="profile-answers">
+          <div>
+            <span className="bullet-label">What they do</span>
+            <p>{context.companySnapshot}</p>
+          </div>
+          <div>
+            <span className="bullet-label">Who they serve</span>
+            <p>{context.likelyCustomers}</p>
+          </div>
+          <div>
+            <span className="bullet-label">Problem this role solves</span>
+            <p>{context.likelyRoleProblem}</p>
+          </div>
+        </div>
+        <p className="truth-note">{context.interviewerContext}</p>
+      </ResultCard>
+
+      <ResultCard title="Tell Me About Yourself" wide>
+        <div className="profile-draft">
+          <span className="bullet-label">Spoken answer, up to 2 minutes</span>
+          <p>{analysis.tellMeAboutYourself}</p>
+        </div>
+      </ResultCard>
+
+      <ResultCard title="Your USP For This Role" wide>
+        <div className="profile-summary">
+          <div>
+            <span className="bullet-label">USP</span>
+            <p>{usp.headline}</p>
+          </div>
+          <div>
+            <span className="bullet-label">Why it fits</span>
+            <p>{usp.whyItFits}</p>
+          </div>
+        </div>
+        <IconList icon={<CheckCircle2 size={18} />} items={safeList(usp.proofPoints)} />
+      </ResultCard>
+
+      <ResultCard title="Likely Interview Questions" wide>
+        <div className="question-groups">
+          {safeList(analysis.likelyQuestions).map((group) => (
+            <section className="question-group" key={group.theme}>
+              <h3>{group.theme}</h3>
+              <div className="question-list">
+                {safeList(group.questions).map((item) => (
+                  <article className="question-card" key={item.question}>
+                    <strong>{item.question}</strong>
+                    <p>{item.whyLikely}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </ResultCard>
+
+      <ResultCard title="Preparation Focus" wide>
+        <IconList icon={<ListChecks size={18} />} items={safeList(analysis.preparationFocus)} />
+        <p className="truth-note">{analysis.truthfulnessNote}</p>
+      </ResultCard>
+    </div>
+  );
+}
+
 function BulletOptimiserResults({ analysis }) {
   return (
     <div className="optimiser-results">
@@ -1173,6 +1529,13 @@ function getApplyRecommendationClass(decision) {
   if (decision === "Yes") return "strong";
   if (decision === "Not yet") return "needs-work";
   return "risk";
+}
+
+function getAccessStatusClass(status) {
+  if (status?.unlimited) return "owner";
+  if (status?.remaining > 0) return "active";
+  if (status) return "empty";
+  return "pending";
 }
 
 function getAttentionGateClass(gate) {

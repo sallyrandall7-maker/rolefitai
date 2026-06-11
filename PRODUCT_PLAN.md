@@ -68,6 +68,7 @@ Known experience must stay within the exact scope the user supplied. For example
 - Never invent experience, projects, metrics, responsibilities, or achievements.
 - Make outputs practical enough that the user can edit a resume immediately.
 - Separate resume submission tools from interview preparation tools.
+- Require server-side access codes before AI calls when the app is shared with testers. Owner codes can be unlimited; tester codes should have quotas.
 
 ## Tool Roadmap
 
@@ -250,7 +251,7 @@ Which resume bullets should I improve before I apply?
 
 ### 5. Review Agent
 
-Status: Next phase, not built yet
+Status: Deferred, not built yet
 
 Purpose: Compare an updated resume against the earlier fit read and target job description to show whether the application has improved.
 
@@ -258,7 +259,7 @@ Near-term decision:
 
 - Do not build this as a separate Phase 1 module yet.
 - For now, the user can paste the revised resume back into the resume box and re-run Fit Check.
-- A dedicated Review module should come next if the current Fit Check, ATS + Bullets, and Profile + Key Capabilities refinements test well.
+- A dedicated Review module can come later if re-running Fit Check is not enough.
 
 Inputs:
 
@@ -313,36 +314,39 @@ User question answered:
 What should I send with this application?
 ```
 
-### 7. Interview Question Predictor Agent
+### 7. Interview Prep Agent
 
-Status: Later
+Status: Next planned build
 
-Purpose: Predict likely interview questions from the job description and resume fit.
+Purpose: Help the user prepare for interviews for a specific role by turning the resume and job description into a focused opening answer, USP, company context, and likely questions.
 
 Inputs:
 
 - Resume
 - Job description
+- Company name
+- Optional interviewer name
 
 Outputs:
 
-- Critical responsibilities
-- Critical stakeholder groups
-- Technical expectations
-- Leadership expectations
-- Delivery expectations
-- Top behavioural questions
-- Top technical questions
-- Stakeholder management questions
-- Prioritisation questions
-- Risk and governance questions
-- Likelihood ranking
+- Company context:
+  - What the company does
+  - Who its customers or users likely are
+  - What problem the role is likely trying to solve
+  - Optional interviewer context when an interviewer name is supplied
+- "Tell me about yourself" answer up to 2 minutes
+- Role-specific USP, based on what the job ad is looking for
+- Likely interview questions grouped by theme:
+  - Product and role fit
+  - Stakeholder and leadership
+  - Delivery, governance, and prioritisation
+  - Behavioural questions
 - Reason each question is likely
 
 User question answered:
 
 ```text
-What am I likely to be asked in an interview?
+How should I introduce myself, what is my strongest angle, and what questions should I prepare for this role?
 ```
 
 ### 8. Personal STAR Coach Agent
@@ -394,7 +398,7 @@ Priority:
 2. Recruiter 8-Second Scan Agent
 3. Executive Profile Generator Agent
 4. Resume Bullet Optimisation Agent
-5. Review Agent next phase, only after the current modules test well
+5. Follow-up message module
 
 Ideal user flow:
 
@@ -408,7 +412,22 @@ Re-run Fit Check if needed
 Apply
 ```
 
-### Phase 2: Application Pack
+### Phase 2: Interview Prep
+
+Goal: Prepare the user once applications start converting into interviews.
+
+Priority:
+
+1. Interview Prep Agent
+2. Tell me about yourself answer
+3. Role-specific USP
+4. Likely interview questions
+5. Company and interviewer context
+6. Personal STAR Coach Agent later
+7. Career story bank later
+8. Interview answer rehearsal and refinement later
+
+### Phase 3: Application Pack
 
 Goal: Help the user create supporting material after the resume is ready.
 
@@ -416,19 +435,8 @@ Priority:
 
 1. Cover Letter Generator
 2. Short application email
-3. LinkedIn/recruiter message
+3. Recruiter message variants
 4. Optional saved application history
-
-### Phase 3: Interview Prep
-
-Goal: Prepare the user once applications start converting into interviews.
-
-Priority:
-
-1. Interview Question Predictor Agent
-2. Personal STAR Coach Agent
-3. Career story bank
-4. Interview answer rehearsal and refinement
 
 ## Recommended App Journey
 
@@ -542,7 +550,7 @@ Later the app can also generate:
 
 ### Review Module
 
-Next phase, not built yet.
+Deferred, not built yet.
 
 For the immediate version, the user can:
 
@@ -564,9 +572,25 @@ Later, a dedicated Review module may compare:
 
 ### Interview Prep
 
-Later, the app can move from application mode into interview mode:
+Next planned module.
 
-- Predict questions
+Inputs:
+
+- Resume
+- Job description
+- Company name
+- Optional interviewer name
+
+Outputs:
+
+- Company context: what the company does, who the customer likely is, and what problem this role is likely trying to solve
+- Optional interviewer context when an interviewer name is supplied
+- "Tell me about yourself" answer up to 2 minutes
+- Role-specific USP based on what the job ad is looking for
+- Likely interview questions grouped by product fit, stakeholder leadership, delivery/governance, prioritisation, and behavioural themes
+
+Later interview tools can add:
+
 - Match questions to real examples
 - Draft STAR answers
 - Identify missing stories
@@ -581,7 +605,7 @@ Layout:
 
 ```text
 Header
-Modules: Fit Check -> ATS + Bullets -> Profile + Key Capabilities -> Follow-up
+Modules: Fit Check -> ATS + Bullets -> Profile + Key Capabilities -> Follow-up -> Interview Prep
 
 Resume input | Job description input
 
@@ -666,6 +690,7 @@ Top modules:
 2. ATS + Bullets
 3. Profile + Key Capabilities
 4. Follow-up
+5. Interview Prep
 
 Fit Check should be recommended but not mandatory. The user can:
 
@@ -674,6 +699,7 @@ Fit Check should be recommended but not mandatory. The user can:
 - Use ATS + Bullets when they already know the role fits and want keyword/bullet help
 - Use Profile + Key Capabilities when they want the top of the resume to match the recruiter target
 - Use Follow-up after applying when they can see someone on the hiring team
+- Use Interview Prep when they are preparing for an interview for the same role
 - Re-run any module after editing the resume, job description, motivation note, or known experience/keywords
 
 The app should not show a global Recommended next action panel in this phase. Module tabs are enough, and each module should keep its own output focused.

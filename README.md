@@ -34,6 +34,11 @@ resume and job description into a practical Apply Today workspace.
 - Includes a **Follow-up** module for a hiring manager LinkedIn outreach
   message after applying, written in a human tone without pushy action
   requests.
+- Includes an **Interview Prep** module for company context, a tailored
+  "Tell me about yourself" answer, a role-specific USP, and likely interview
+  questions.
+- Includes server-side tester access codes with quotas, so shared testers can
+  only run a limited number of AI calls while an owner code can stay unlimited.
 
 ## How To Run It
 
@@ -78,6 +83,9 @@ It should look like this:
 ```env
 OPENAI_API_KEY=your_key_here
 OPENAI_MODEL=gpt-5-mini
+APP_INVITE_CODES=SALLYOWNER:unlimited,TESTER123:50
+KV_REST_API_URL=your_kv_rest_api_url_here
+KV_REST_API_TOKEN=your_kv_rest_api_token_here
 ```
 
 Never put the API key inside the `src` folder. Anything in `src` is browser
@@ -94,6 +102,19 @@ OPENAI_MODEL=gpt-5.2
 ```
 
 After changing `.env`, stop the app with `Ctrl + C`, then start it again.
+
+`APP_INVITE_CODES` controls who can run AI tools. Use this format:
+
+```env
+APP_INVITE_CODES=SALLYOWNER:unlimited,ANNA123:50
+```
+
+That means:
+
+- `SALLYOWNER` has unlimited owner access.
+- `ANNA123` has 50 AI calls.
+- Usage is tracked in Upstash/Vercel KV, not in the browser.
+- The public website never contains the list of valid codes.
 
 ## File Guide
 
@@ -212,7 +233,7 @@ This is the main screen. It contains:
 - the known experience or keywords textarea
 - the Profile module's optional What they're looking for textarea
 - the module buttons for Fit Check, ATS + Bullets, Profile + Key Capabilities,
-  and Follow-up
+  Follow-up, and Interview Prep
 - loading and error states
 - the results area
 

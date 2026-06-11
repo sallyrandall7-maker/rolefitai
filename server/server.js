@@ -1,5 +1,6 @@
 import http from "node:http";
 import fs from "node:fs";
+import { checkAccessCode, consumeAccessCode } from "./inviteAccess.js";
 import { requestOpenAiAnalysis } from "./openAiAnalysis.js";
 
 const PORT = 8787;
@@ -56,6 +57,11 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "POST" && request.url === "/api/access") {
+    await handleAccess(request, response);
+    return;
+  }
+
   sendJson(response, 404, { error: "Route not found." });
 });
 
@@ -80,6 +86,8 @@ async function handleAnalyse(request, response) {
     const motivationNote = String(body.motivationNote || "").trim();
     const priorityRequirements = String(body.priorityRequirements || "").trim();
     const knownContext = String(body.knownContext || "").trim();
+    const companyName = String(body.companyName || "").trim();
+    const interviewerName = String(body.interviewerName || "").trim();
     const analysisType = String(body.analysisType || "roleMatch");
 
     if (!resume || !jobDescription) {
@@ -96,6 +104,16 @@ async function handleAnalyse(request, response) {
       return;
     }
 
+    const accessCheck = await consumeAccessCode(body.accessCode);
+
+    if (!accessCheck.ok) {
+      sendJson(response, accessCheck.statusCode, {
+        error: accessCheck.error,
+        accessStatus: accessCheck.accessStatus
+      });
+      return;
+    }
+
     const analysis = await requestOpenAiAnalysis({
       apiKey,
       resume,
@@ -103,14 +121,38 @@ async function handleAnalyse(request, response) {
       motivationNote,
       priorityRequirements,
       knownContext,
+      companyName,
+      interviewerName,
       analysisType
     });
 
-    sendJson(response, 200, analysis);
+    sendJson(response, 200, {
+      ...analysis,
+      accessStatus: accessCheck.accessStatus
+    });
   } catch (error) {
     console.error(error);
     sendJson(response, 500, {
       error: "Something went wrong while analysing the resume.",
+      details: error.message
+    });
+  }
+}
+
+async function handleAccess(request, response) {
+  try {
+    const body = await readJsonBody(request);
+    const accessCheck = await checkAccessCode(body.accessCode);
+
+    sendJson(response, accessCheck.statusCode, {
+      ok: accessCheck.ok,
+      error: accessCheck.error,
+      accessStatus: accessCheck.accessStatus
+    });
+  } catch (error) {
+    console.error(error);
+    sendJson(response, 500, {
+      error: "Something went wrong while checking the access code.",
       details: error.message
     });
   }

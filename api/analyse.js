@@ -1,4 +1,5 @@
 import { requestOpenAiAnalysis } from "../server/openAiAnalysis.js";
+import { consumeAccessCode } from "../server/inviteAccess.js";
 
 const MAX_TEXT_LENGTH = 20000;
 
@@ -23,6 +24,8 @@ export default async function handler(request, response) {
     const motivationNote = String(request.body?.motivationNote || "").trim();
     const priorityRequirements = String(request.body?.priorityRequirements || "").trim();
     const knownContext = String(request.body?.knownContext || "").trim();
+    const companyName = String(request.body?.companyName || "").trim();
+    const interviewerName = String(request.body?.interviewerName || "").trim();
     const analysisType = String(request.body?.analysisType || "roleMatch");
 
     if (!resume || !jobDescription) {
@@ -39,6 +42,16 @@ export default async function handler(request, response) {
       return;
     }
 
+    const accessCheck = await consumeAccessCode(request.body?.accessCode);
+
+    if (!accessCheck.ok) {
+      response.status(accessCheck.statusCode).json({
+        error: accessCheck.error,
+        accessStatus: accessCheck.accessStatus
+      });
+      return;
+    }
+
     const analysis = await requestOpenAiAnalysis({
       apiKey,
       resume,
@@ -46,10 +59,15 @@ export default async function handler(request, response) {
       motivationNote,
       priorityRequirements,
       knownContext,
+      companyName,
+      interviewerName,
       analysisType
     });
 
-    response.status(200).json(analysis);
+    response.status(200).json({
+      ...analysis,
+      accessStatus: accessCheck.accessStatus
+    });
   } catch (error) {
     console.error(error);
     response.status(500).json({

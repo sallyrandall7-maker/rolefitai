@@ -18,6 +18,7 @@ body {
 }
 
 button,
+input,
 textarea {
   font: inherit;
 }
@@ -104,7 +105,7 @@ h1 {
 
 .progress-steps {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 22px;
 }
@@ -132,6 +133,65 @@ h1 {
   border-color: #f5c27e;
   color: #9a3412;
   background: #fff9f1;
+}
+
+.access-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 18px;
+  border: 1px solid #ead8c8;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff9f1;
+}
+
+.access-form {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.access-form input {
+  width: min(320px, 100%);
+  min-height: 38px;
+  border: 1px solid #cdd6e2;
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #1f2937;
+  background: #ffffff;
+  outline: none;
+}
+
+.access-form input:focus {
+  border-color: #c65d1d;
+  box-shadow: 0 0 0 3px rgba(198, 93, 29, 0.14);
+}
+
+.access-status {
+  border-radius: 999px;
+  padding: 8px 11px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.access-status.owner,
+.access-status.active {
+  color: #146c43;
+  background: #dff4e8;
+}
+
+.access-status.empty {
+  color: #8a2424;
+  background: #ffe2e2;
+}
+
+.access-status.pending {
+  color: #5b6472;
+  background: #f1ede9;
 }
 
 .workspace {
@@ -235,7 +295,19 @@ textarea {
   font-size: 0.92rem;
 }
 
-textarea:focus {
+.mini-field input {
+  min-height: 42px;
+  border: 1px solid #cdd6e2;
+  border-radius: 8px;
+  padding: 0 12px;
+  color: #1f2937;
+  background: #ffffff;
+  font-size: 0.94rem;
+  outline: none;
+}
+
+textarea:focus,
+.mini-field input:focus {
   border-color: #c65d1d;
   box-shadow: 0 0 0 3px rgba(198, 93, 29, 0.14);
 }
@@ -850,7 +922,8 @@ textarea:focus {
 
 .profile-summary,
 .profile-answers,
-.profile-columns {
+.profile-columns,
+.interview-inputs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
@@ -908,10 +981,52 @@ textarea:focus {
 }
 
 .profile-columns h3,
-.profile-results h3 {
+.profile-results h3,
+.interview-results h3 {
   margin: 0 0 10px;
   color: #111827;
   font-size: 0.95rem;
+}
+
+.interview-results {
+  display: grid;
+  gap: 16px;
+}
+
+.question-groups {
+  display: grid;
+  gap: 16px;
+}
+
+.question-group {
+  min-width: 0;
+}
+
+.question-list {
+  display: grid;
+  gap: 10px;
+}
+
+.question-card {
+  display: grid;
+  gap: 6px;
+  border: 1px solid #ead8c8;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fffaf5;
+}
+
+.question-card strong {
+  color: #111827;
+  overflow-wrap: anywhere;
+}
+
+.question-card p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .capability-table {
@@ -982,18 +1097,35 @@ textarea:focus {
   }
 
   .progress-steps {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .access-panel,
   .workspace,
   .module-panel-header,
   .first-page-scan,
   .profile-summary,
   .profile-answers,
   .profile-columns,
+  .interview-inputs,
   .results-grid,
   .loading-steps {
     grid-template-columns: 1fr;
+  }
+
+  .access-form {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .access-form input {
+    width: 100%;
+  }
+
+  .access-status {
+    width: fit-content;
+    max-width: 100%;
+    white-space: normal;
   }
 
   .analyse-button {

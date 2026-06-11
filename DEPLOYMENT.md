@@ -24,10 +24,12 @@ React app -> local Node server -> OpenAI
 Vercel deployment:
 
 ```text
-React app -> Vercel /api/analyse function -> OpenAI
+React app -> Vercel /api/access function -> Upstash Redis
+React app -> Vercel /api/analyse function -> Upstash Redis -> OpenAI
 ```
 
 The browser never receives your OpenAI API key.
+The browser also never receives the list of valid access codes.
 
 ## Files Added For Deployment
 
@@ -59,7 +61,7 @@ it does not contain your real key.
 In PowerShell:
 
 ```powershell
-cd "C:\Users\sally\OneDrive\Documents\Job search project"
+cd "C:\Users\sally\OneDrive\Documents\rolefit ai github"
 git init
 git add .
 git commit -m "Prepare RoleFit AI for Vercel deployment"
@@ -106,6 +108,36 @@ with:
 gpt-5-mini
 ```
 
+Also add access codes:
+
+```text
+APP_INVITE_CODES
+```
+
+Example:
+
+```text
+SALLYOWNER:unlimited,ANNA123:50
+```
+
+That gives your private owner code unlimited AI calls and gives Anna's tester
+code 50 AI calls.
+
+Connect Upstash Redis from Vercel Marketplace/Storage. Vercel should create
+these environment variables automatically:
+
+```text
+KV_REST_API_URL
+KV_REST_API_TOKEN
+```
+
+If you used a custom prefix, the variables may be:
+
+```text
+STORAGE_KV_REST_API_URL
+STORAGE_KV_REST_API_TOKEN
+```
+
 ## Step 4: Deploy
 
 Click **Deploy** in Vercel.
@@ -115,12 +147,12 @@ an interview demo.
 
 ## Cost Reminder
 
-Anyone with the demo URL can use your OpenAI API unless you add access control.
+Anyone with the demo URL still needs a valid access code before the backend
+will call OpenAI.
 
 For an interview demo, keep:
 
 - `OPENAI_MODEL=gpt-5-mini`
 - OpenAI monthly budget limits enabled
+- tester codes with finite quotas
 - resume/job text under the app's character limit
-
-Later, you can add a demo password or request limit.

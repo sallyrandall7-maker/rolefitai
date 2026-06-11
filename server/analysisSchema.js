@@ -320,4 +320,112 @@ export const contactNoteSchema = {
   required: ["shortNote", "whyMeLine", "whyThemLine", "toneCheck"]
 };
 
+export const interviewPrepSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    companyContext: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        companySnapshot: {
+          type: "string",
+          description: "Short paragraph explaining what the company does."
+        },
+        likelyCustomers: {
+          type: "string",
+          description: "Short paragraph explaining who the company's customers or users likely are."
+        },
+        likelyRoleProblem: {
+          type: "string",
+          description: "Short paragraph explaining the problem this role is likely expected to solve."
+        },
+        interviewerContext: {
+          type: "string",
+          description: "Short note using the interviewer name if supplied, otherwise a neutral note."
+        }
+      },
+      required: [
+        "companySnapshot",
+        "likelyCustomers",
+        "likelyRoleProblem",
+        "interviewerContext"
+      ]
+    },
+    tellMeAboutYourself: {
+      type: "string",
+      description: "A conversational answer up to 2 minutes that is tailored to the job description."
+    },
+    usp: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        headline: {
+          type: "string",
+          description: "Short role-specific unique selling proposition."
+        },
+        whyItFits: {
+          type: "string",
+          description: "Why this USP fits the role and job description."
+        },
+        proofPoints: {
+          type: "array",
+          items: { type: "string" },
+          description: "Evidence from the resume supporting the USP."
+        }
+      },
+      required: ["headline", "whyItFits", "proofPoints"]
+    },
+    likelyQuestions: {
+      type: "array",
+      description: "Likely interview questions grouped by theme.",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          theme: {
+            type: "string",
+            enum: [
+              "Product and role fit",
+              "Stakeholder and leadership",
+              "Delivery, governance, and prioritisation",
+              "Behavioural"
+            ]
+          },
+          questions: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                question: { type: "string" },
+                whyLikely: { type: "string" }
+              },
+              required: ["question", "whyLikely"]
+            }
+          }
+        },
+        required: ["theme", "questions"]
+      }
+    },
+    preparationFocus: {
+      type: "array",
+      items: { type: "string" },
+      description: "The highest-value preparation areas before the interview."
+    },
+    truthfulnessNote: {
+      type: "string",
+      description: "Reminder to keep interview answers grounded in real experience."
+    }
+  },
+  required: [
+    "companyContext",
+    "tellMeAboutYourself",
+    "usp",
+    "likelyQuestions",
+    "preparationFocus",
+    "truthfulnessNote"
+  ]
+};
+
 export const analysisSchema = roleMatchSchema;
