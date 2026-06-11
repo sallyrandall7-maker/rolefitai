@@ -135,33 +135,59 @@ h1 {
   background: #fff9f1;
 }
 
-.access-panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
+.access-utility {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
+  min-width: 0;
+}
+
+.access-gate {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
   border: 1px solid #ead8c8;
   border-radius: 8px;
-  padding: 14px;
+  padding: 28px;
   background: #fff9f1;
+  text-align: center;
+}
+
+.access-gate h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.2rem;
+}
+
+.access-gate p:not(.panel-label) {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.5;
 }
 
 .access-form {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
 }
 
 .access-form input {
-  width: min(320px, 100%);
-  min-height: 38px;
+  width: min(320px, 70vw);
+  min-height: 32px;
   border: 1px solid #cdd6e2;
   border-radius: 8px;
-  padding: 0 12px;
+  padding: 0 10px;
   color: #1f2937;
   background: #ffffff;
+  font-size: 0.85rem;
   outline: none;
+}
+
+.access-utility .access-form input {
+  width: 150px;
 }
 
 .access-form input:focus {
@@ -171,8 +197,8 @@ h1 {
 
 .access-status {
   border-radius: 999px;
-  padding: 8px 11px;
-  font-size: 0.86rem;
+  padding: 6px 9px;
+  font-size: 0.78rem;
   font-weight: 800;
   text-align: center;
   white-space: nowrap;
@@ -192,6 +218,21 @@ h1 {
 .access-status.pending {
   color: #5b6472;
   background: #f1ede9;
+}
+
+.text-button {
+  border: 0;
+  padding: 0;
+  color: #9a3412;
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  color: #7c2d12;
+  text-decoration: underline;
 }
 
 .workspace {
@@ -1100,7 +1141,6 @@ textarea:focus,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .access-panel,
   .workspace,
   .module-panel-header,
   .first-page-scan,
@@ -1113,9 +1153,14 @@ textarea:focus,
     grid-template-columns: 1fr;
   }
 
+  .access-utility {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .access-form {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .access-form input {

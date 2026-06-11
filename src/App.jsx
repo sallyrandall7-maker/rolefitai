@@ -22,6 +22,7 @@ const ACCESS_URL = import.meta.env.PROD
   ? "/api/access"
   : "http://127.0.0.1:8787/api/access";
 const ACCESS_CODE_STORAGE_KEY = "sallyCareerCoachAccessCode";
+const TESTER_ACCESS_SESSION_MS = 20 * 60 * 1000;
 
 const moduleTabs = [
   "Fit Check",
@@ -87,13 +88,13 @@ function App() {
   const [knownContext, setKnownContext] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [interviewerName, setInterviewerName] = useState("");
-  const [accessCode, setAccessCode] = useState(() =>
-    window.localStorage.getItem(ACCESS_CODE_STORAGE_KEY) || ""
-  );
-  const [accessStatus, setAccessStatus] = useState(null);
+  const [accessCode, setAccessCode] = useState(() => readSavedAccess().code);
+  const [accessStatus, setAccessStatus] = useState(() => readSavedAccess().status);
+  const [accessVerifiedAt, setAccessVerifiedAt] = useState(() => readSavedAccess().verifiedAt);
   const [isCheckingAccess, setIsCheckingAccess] = useState(false);
   const [activeStep, setActiveStep] = useState("Fit Check");
   const currentStep = activeStep;
+  const hasValidAccess = hasActiveAccess(accessStatus, accessVerifiedAt);
   const activeLoadingSteps = isPreparingInterview
     ? interviewPrepLoadingSteps
     : isGeneratingContactNote
@@ -133,11 +134,21 @@ function App() {
   ]);
 
   useEffect(() => {
-    const savedCode = window.localStorage.getItem(ACCESS_CODE_STORAGE_KEY);
+    const savedAccess = readSavedAccess();
 
-    if (savedCode) {
-      handleAccessCheck(savedCode, { silent: true });
+    if (!savedAccess.code) {
+      return;
     }
+
+    if (!hasActiveAccess(savedAccess.status, savedAccess.verifiedAt)) {
+      clearSavedAccess();
+      setAccessCode("");
+      setAccessStatus(null);
+      setAccessVerifiedAt(0);
+      return;
+    }
+
+    handleAccessCheck(savedAccess.code, { silent: true });
   }, []);
 
   async function handleAccessCheck(codeToCheck = accessCode, options = {}) {
@@ -173,8 +184,9 @@ function App() {
       }
 
       setAccessCode(trimmedCode);
-      window.localStorage.setItem(ACCESS_CODE_STORAGE_KEY, trimmedCode);
       setAccessStatus(data.accessStatus || null);
+      setAccessVerifiedAt(Date.now());
+      saveAccess(trimmedCode, data.accessStatus || null);
     } catch (requestError) {
       if (!options.silent) {
         setError(getFriendlyRequestError(requestError));
@@ -187,7 +199,27 @@ function App() {
   function updateAccessStatusFromResponse(data) {
     if (data?.accessStatus) {
       setAccessStatus(data.accessStatus);
+      setAccessVerifiedAt(Date.now());
+      saveAccess(accessCode, data.accessStatus);
     }
+  }
+
+  function handleChangeAccessCode() {
+    clearSavedAccess();
+    setAccessCode("");
+    setAccessStatus(null);
+    setAccessVerifiedAt(0);
+    setError("");
+  }
+
+  function requireActiveAccess() {
+    if (hasActiveAccess(accessStatus, accessVerifiedAt)) {
+      return true;
+    }
+
+    handleChangeAccessCode();
+    setError("Enter your access code to use the page.");
+    return false;
   }
 
   async function handleDocxUpload(event) {
@@ -216,6 +248,8 @@ function App() {
   }
 
   async function handleFitCheck() {
+    if (!requireActiveAccess()) return;
+
     setError("");
     setFitAnalysis(null);
     setLoadingStepIndex(0);
@@ -255,6 +289,8 @@ function App() {
   }
 
   async function handleBulletOptimiser() {
+    if (!requireActiveAccess()) return;
+
     setError("");
     setBulletAnalysis(null);
     setLoadingStepIndex(0);
@@ -293,6 +329,8 @@ function App() {
   }
 
   async function handleProfileOptimiser() {
+    if (!requireActiveAccess()) return;
+
     setError("");
     setProfileAnalysis(null);
     setLoadingStepIndex(0);
@@ -333,6 +371,8 @@ function App() {
   }
 
   async function handleContactNote() {
+    if (!requireActiveAccess()) return;
+
     setError("");
     setContactNote(null);
     setLoadingStepIndex(0);
@@ -372,6 +412,8 @@ function App() {
   }
 
   async function handleInterviewPrep() {
+    if (!requireActiveAccess()) return;
+
     setError("");
     setInterviewPrep(null);
     setLoadingStepIndex(0);
@@ -446,6 +488,13 @@ function App() {
 
   return (
     <main className="app-shell">
+      {hasValidAccess ? (
+        <AccessUtility
+          accessStatus={accessStatus}
+          onChangeAccessCode={handleChangeAccessCode}
+        />
+      ) : null}
+
       <section
         className="intro hero"
         style={{ backgroundImage: `url(${headerImage})` }}
@@ -460,154 +509,160 @@ function App() {
         </div>
       </section>
 
-      <AccessPanel
-        accessCode={accessCode}
-        accessStatus={accessStatus}
-        isCheckingAccess={isCheckingAccess}
-        onAccessCodeChange={setAccessCode}
-        onCheckAccess={() => handleAccessCheck()}
-      />
+      {!hasValidAccess ? (
+        <>
+          <AccessGate
+            accessCode={accessCode}
+            isCheckingAccess={isCheckingAccess}
+            onAccessCodeChange={setAccessCode}
+            onCheckAccess={() => handleAccessCheck()}
+          />
+          {error ? <p className="error-message">{error}</p> : null}
+        </>
+      ) : (
+        <>
+          <ProgressSteps
+            currentStep={currentStep}
+            onStepChange={setActiveStep}
+            steps={moduleTabs}
+          />
 
-      <ProgressSteps
-        currentStep={currentStep}
-        onStepChange={setActiveStep}
-        steps={moduleTabs}
-      />
+          <section className="workspace" aria-label="Resume and job description form">
+            <label className="field">
+              <span className="field-heading">
+                Resume
+                <span className="field-actions">
+                  <UploadButton onUpload={handleDocxUpload} />
+                  <button
+                    className="sample-button"
+                    onClick={handleNewResume}
+                    title="Clear resume and keep this job"
+                    type="button"
+                  >
+                    <RotateCcw size={15} aria-hidden="true" />
+                    New resume
+                  </button>
+                  <button
+                    className="sample-button"
+                    onClick={() => setResume(sampleResume)}
+                    type="button"
+                  >
+                    Load sample
+                  </button>
+                </span>
+              </span>
+              <textarea
+                value={resume}
+                onChange={(event) => setResume(event.target.value)}
+                placeholder="Paste your resume here, or upload a .docx file..."
+              />
+              {uploadMessage ? <p className="helper-message">{uploadMessage}</p> : null}
+            </label>
 
-      <section className="workspace" aria-label="Resume and job description form">
-        <label className="field">
-          <span className="field-heading">
-            Resume
-            <span className="field-actions">
-              <UploadButton onUpload={handleDocxUpload} />
-              <button
-                className="sample-button"
-                onClick={handleNewResume}
-                title="Clear resume and keep this job"
-                type="button"
-              >
-                <RotateCcw size={15} aria-hidden="true" />
-                New resume
-              </button>
-              <button
-                className="sample-button"
-                onClick={() => setResume(sampleResume)}
-                type="button"
-              >
-                Load sample
-              </button>
-            </span>
-          </span>
-          <textarea
-            value={resume}
-            onChange={(event) => setResume(event.target.value)}
-            placeholder="Paste your resume here, or upload a .docx file..."
-          />
-          {uploadMessage ? <p className="helper-message">{uploadMessage}</p> : null}
-        </label>
+            <label className="field">
+              <span className="field-heading">
+                Job Description
+                <span className="field-actions">
+                  <button
+                    className="sample-button"
+                    onClick={handleNewRole}
+                    title="Clear this role and keep your resume"
+                    type="button"
+                  >
+                    <RotateCcw size={15} aria-hidden="true" />
+                    New role
+                  </button>
+                  <button
+                    className="sample-button"
+                    onClick={() => setJobDescription(sampleJobDescription)}
+                    type="button"
+                  >
+                    Load sample
+                  </button>
+                </span>
+              </span>
+              <textarea
+                value={jobDescription}
+                onChange={(event) => setJobDescription(event.target.value)}
+                placeholder="Paste the job description here..."
+              />
+            </label>
+          </section>
 
-        <label className="field">
-          <span className="field-heading">
-            Job Description
-            <span className="field-actions">
-              <button
-                className="sample-button"
-                onClick={handleNewRole}
-                title="Clear this role and keep your resume"
-                type="button"
-              >
-                <RotateCcw size={15} aria-hidden="true" />
-                New role
-              </button>
-              <button
-                className="sample-button"
-                onClick={() => setJobDescription(sampleJobDescription)}
-                type="button"
-              >
-                Load sample
-              </button>
-            </span>
-          </span>
-          <textarea
-            value={jobDescription}
-            onChange={(event) => setJobDescription(event.target.value)}
-            placeholder="Paste the job description here..."
-          />
-        </label>
-      </section>
+          <section className="context-panel" aria-label="Known experience and keywords">
+            <label className="field">
+              <span className="field-heading">Known experience or keywords to consider</span>
+              <textarea
+                value={knownContext}
+                onChange={(event) => setKnownContext(event.target.value)}
+                placeholder="Add true experience or keywords that are missing from the resume, such as MDM, data governance, vendor management, Salesforce migration..."
+              />
+            </label>
+          </section>
 
-      <section className="context-panel" aria-label="Known experience and keywords">
-        <label className="field">
-          <span className="field-heading">Known experience or keywords to consider</span>
-          <textarea
-            value={knownContext}
-            onChange={(event) => setKnownContext(event.target.value)}
-            placeholder="Add true experience or keywords that are missing from the resume, such as MDM, data governance, vendor management, Salesforce migration..."
-          />
-        </label>
-      </section>
+          {error ? <p className="error-message">{error}</p> : null}
 
-      {error ? <p className="error-message">{error}</p> : null}
-
-      <section className="results" aria-label="Apply Today results">
-        {isAnalysing ? (
-          <LoadingResults
-            currentStepIndex={loadingStepIndex}
-            loadingSteps={loadingSteps}
-            title="Running Fit Check"
-          />
-        ) : isPreparingInterview ? (
-          <LoadingResults
-            currentStepIndex={loadingStepIndex}
-            loadingSteps={interviewPrepLoadingSteps}
-            title="Preparing interview notes"
-          />
-        ) : isGeneratingContactNote ? (
-          <LoadingResults
-            currentStepIndex={loadingStepIndex}
-            loadingSteps={contactNoteLoadingSteps}
-            title="Writing hiring manager outreach"
-          />
-        ) : isOptimisingProfile ? (
-          <LoadingResults
-            currentStepIndex={loadingStepIndex}
-            loadingSteps={profileLoadingSteps}
-            title="Optimising profile and key capabilities"
-          />
-        ) : isOptimising ? (
-          <LoadingResults
-            currentStepIndex={loadingStepIndex}
-            loadingSteps={optimiserLoadingSteps}
-            title="Optimising resume bullets"
-          />
-        ) : (
-          <ApplyTodayWorkspace
-            activeStep={activeStep}
-            analysis={fitAnalysis}
-            bulletAnalysis={bulletAnalysis}
-            profileAnalysis={profileAnalysis}
-            contactNote={contactNote}
-            interviewPrep={interviewPrep}
-            isOptimising={isOptimising}
-            isOptimisingProfile={isOptimisingProfile}
-            isGeneratingContactNote={isGeneratingContactNote}
-            isPreparingInterview={isPreparingInterview}
-            onOptimiseBullets={handleBulletOptimiser}
-            onOptimiseProfile={handleProfileOptimiser}
-            onGenerateContactNote={handleContactNote}
-            onPrepareInterview={handleInterviewPrep}
-            onRunFitCheck={handleFitCheck}
-            motivationNote={motivationNote}
-            onMotivationNoteChange={setMotivationNote}
-            priorityRequirements={priorityRequirements}
-            onPriorityRequirementsChange={setPriorityRequirements}
-            companyName={companyName}
-            onCompanyNameChange={setCompanyName}
-            interviewerName={interviewerName}
-            onInterviewerNameChange={setInterviewerName}
-          />
-        )}
-      </section>
+          <section className="results" aria-label="Apply Today results">
+            {isAnalysing ? (
+              <LoadingResults
+                currentStepIndex={loadingStepIndex}
+                loadingSteps={loadingSteps}
+                title="Running Fit Check"
+              />
+            ) : isPreparingInterview ? (
+              <LoadingResults
+                currentStepIndex={loadingStepIndex}
+                loadingSteps={interviewPrepLoadingSteps}
+                title="Preparing interview notes"
+              />
+            ) : isGeneratingContactNote ? (
+              <LoadingResults
+                currentStepIndex={loadingStepIndex}
+                loadingSteps={contactNoteLoadingSteps}
+                title="Writing hiring manager outreach"
+              />
+            ) : isOptimisingProfile ? (
+              <LoadingResults
+                currentStepIndex={loadingStepIndex}
+                loadingSteps={profileLoadingSteps}
+                title="Optimising profile and key capabilities"
+              />
+            ) : isOptimising ? (
+              <LoadingResults
+                currentStepIndex={loadingStepIndex}
+                loadingSteps={optimiserLoadingSteps}
+                title="Optimising resume bullets"
+              />
+            ) : (
+              <ApplyTodayWorkspace
+                activeStep={activeStep}
+                analysis={fitAnalysis}
+                bulletAnalysis={bulletAnalysis}
+                profileAnalysis={profileAnalysis}
+                contactNote={contactNote}
+                interviewPrep={interviewPrep}
+                isOptimising={isOptimising}
+                isOptimisingProfile={isOptimisingProfile}
+                isGeneratingContactNote={isGeneratingContactNote}
+                isPreparingInterview={isPreparingInterview}
+                onOptimiseBullets={handleBulletOptimiser}
+                onOptimiseProfile={handleProfileOptimiser}
+                onGenerateContactNote={handleContactNote}
+                onPrepareInterview={handleInterviewPrep}
+                onRunFitCheck={handleFitCheck}
+                motivationNote={motivationNote}
+                onMotivationNoteChange={setMotivationNote}
+                priorityRequirements={priorityRequirements}
+                onPriorityRequirementsChange={setPriorityRequirements}
+                companyName={companyName}
+                onCompanyNameChange={setCompanyName}
+                interviewerName={interviewerName}
+                onInterviewerNameChange={setInterviewerName}
+              />
+            )}
+          </section>
+        </>
+      )}
     </main>
   );
 }
@@ -629,43 +684,68 @@ function ProgressSteps({ steps, currentStep, onStepChange }) {
   );
 }
 
-function AccessPanel({
+function AccessGate({
   accessCode,
-  accessStatus,
   isCheckingAccess,
   onAccessCodeChange,
   onCheckAccess
 }) {
   return (
-    <section className="access-panel" aria-label="Access code">
-      <div>
-        <p className="panel-label">Test access</p>
-        <div className="access-form">
-          <input
-            value={accessCode}
-            onChange={(event) => onAccessCodeChange(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                onCheckAccess();
-              }
-            }}
-            placeholder="Enter access code"
-            type="password"
-          />
-          <button
-            className="sample-button"
-            disabled={isCheckingAccess}
-            onClick={onCheckAccess}
-            type="button"
-          >
-            {isCheckingAccess ? "Checking..." : "Check"}
-          </button>
-        </div>
-      </div>
-      <div className={`access-status ${getAccessStatusClass(accessStatus)}`}>
-        {accessStatus?.message || "Enter your code to unlock AI tools"}
-      </div>
+    <section className="access-gate" aria-label="Access code">
+      <p className="panel-label">Access code</p>
+      <h2>Enter your access code to use the page</h2>
+      <p>This is a private test version of Sally's AI Career Coach.</p>
+      <AccessCodeForm
+        accessCode={accessCode}
+        isCheckingAccess={isCheckingAccess}
+        onAccessCodeChange={onAccessCodeChange}
+        onCheckAccess={onCheckAccess}
+      />
     </section>
+  );
+}
+
+function AccessUtility({ accessStatus, onChangeAccessCode }) {
+  return (
+    <section className="access-utility" aria-label="Current access">
+      <span className={`access-status ${getAccessStatusClass(accessStatus)}`}>
+        {accessStatus?.message}
+      </span>
+      <button className="text-button" onClick={onChangeAccessCode} type="button">
+        Change access code
+      </button>
+    </section>
+  );
+}
+
+function AccessCodeForm({
+  accessCode,
+  isCheckingAccess,
+  onAccessCodeChange,
+  onCheckAccess
+}) {
+  return (
+    <div className="access-form">
+      <input
+        value={accessCode}
+        onChange={(event) => onAccessCodeChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            onCheckAccess();
+          }
+        }}
+        placeholder="Enter access code"
+        type="password"
+      />
+      <button
+        className="sample-button"
+        disabled={isCheckingAccess}
+        onClick={onCheckAccess}
+        type="button"
+      >
+        {isCheckingAccess ? "..." : "Go"}
+      </button>
+    </div>
   );
 }
 
@@ -1461,6 +1541,66 @@ function IconList({ icon, items }) {
 
 function safeList(items) {
   return Array.isArray(items) ? items.filter(Boolean) : [];
+}
+
+function readSavedAccess() {
+  try {
+    const rawAccess = window.localStorage.getItem(ACCESS_CODE_STORAGE_KEY);
+
+    if (!rawAccess) {
+      return { code: "", status: null, verifiedAt: 0 };
+    }
+
+    if (!rawAccess.trim().startsWith("{")) {
+      return { code: rawAccess, status: null, verifiedAt: 0 };
+    }
+
+    const savedAccess = JSON.parse(rawAccess);
+
+    return {
+      code: savedAccess.code || "",
+      status: savedAccess.status || null,
+      verifiedAt: Number(savedAccess.verifiedAt || 0)
+    };
+  } catch {
+    return { code: "", status: null, verifiedAt: 0 };
+  }
+}
+
+function saveAccess(code, status) {
+  if (!code || !status) {
+    clearSavedAccess();
+    return;
+  }
+
+  window.localStorage.setItem(
+    ACCESS_CODE_STORAGE_KEY,
+    JSON.stringify({
+      code,
+      status,
+      verifiedAt: Date.now()
+    })
+  );
+}
+
+function clearSavedAccess() {
+  window.localStorage.removeItem(ACCESS_CODE_STORAGE_KEY);
+}
+
+function hasActiveAccess(status, verifiedAt) {
+  if (!status) {
+    return false;
+  }
+
+  if (status.unlimited) {
+    return true;
+  }
+
+  if (!status.remaining || status.remaining <= 0) {
+    return false;
+  }
+
+  return Date.now() - Number(verifiedAt || 0) < TESTER_ACCESS_SESSION_MS;
 }
 
 function normaliseScore(score) {

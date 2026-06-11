@@ -115,6 +115,8 @@ That means:
 - `ANNA123` has 50 AI calls.
 - Usage is tracked in Upstash/Vercel KV, not in the browser.
 - The public website never contains the list of valid codes.
+- Owner access stays remembered in the browser. Tester access is remembered for
+  20 minutes, then the user must enter the code again.
 
 ## File Guide
 
