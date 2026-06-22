@@ -342,14 +342,36 @@ export const interviewPrepSchema = {
         },
         interviewerContext: {
           type: "string",
-          description: "Short note using the interviewer name if supplied, otherwise a neutral note."
+          description: "Short research-based note using the interviewer name if supplied, otherwise a neutral note."
+        },
+        interviewerResearchBasis: {
+          type: "string",
+          description: "Short explanation of whether interviewer context came from public web research or was unavailable."
+        },
+        interviewerSourceUrls: {
+          type: "array",
+          items: { type: "string" },
+          description: "Public source URLs used for interviewer research."
+        },
+        researchBasis: {
+          type: "string",
+          description: "Short explanation of whether the company context came from web research or limited supplied information."
+        },
+        sourceUrls: {
+          type: "array",
+          items: { type: "string" },
+          description: "Public source URLs used for company research."
         }
       },
       required: [
         "companySnapshot",
         "likelyCustomers",
         "likelyRoleProblem",
-        "interviewerContext"
+        "interviewerContext",
+        "interviewerResearchBasis",
+        "interviewerSourceUrls",
+        "researchBasis",
+        "sourceUrls"
       ]
     },
     tellMeAboutYourself: {

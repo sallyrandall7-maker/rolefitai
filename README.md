@@ -37,6 +37,10 @@ resume and job description into a practical Apply Today workspace.
 - Includes an **Interview Prep** module for company context, a tailored
   "Tell me about yourself" answer, a role-specific USP, and likely interview
   questions.
+- Interview Prep uses the company name to research what the company actually
+  does, then combines that with the job description for role context.
+- If an interviewer name is supplied, Interview Prep also researches public
+  information about that person and says clearly when no reliable match is found.
 - Includes server-side tester access codes with quotas, so shared testers can
   only run a limited number of AI calls while an owner code can stay unlimited.
 

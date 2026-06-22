@@ -333,7 +333,7 @@ Outputs:
   - What the company does
   - Who its customers or users likely are
   - What problem the role is likely trying to solve
-  - Optional interviewer context when an interviewer name is supplied
+  - Optional interviewer context from public web research when an interviewer name is supplied
 - "Tell me about yourself" answer up to 2 minutes
 - Role-specific USP, based on what the job ad is looking for
 - Likely interview questions grouped by theme:
@@ -584,7 +584,8 @@ Inputs:
 Outputs:
 
 - Company context: what the company does, who the customer likely is, and what problem this role is likely trying to solve
-- Optional interviewer context when an interviewer name is supplied
+- Company context should use web research based on the company name when supplied, not only the job description.
+- Optional interviewer context from public web research when an interviewer name is supplied
 - "Tell me about yourself" answer up to 2 minutes
 - Role-specific USP based on what the job ad is looking for
 - Likely interview questions grouped by product fit, stakeholder leadership, delivery/governance, prioritisation, and behavioural themes

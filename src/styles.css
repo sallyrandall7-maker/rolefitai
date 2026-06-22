@@ -1070,6 +1070,37 @@ textarea:focus,
   overflow-wrap: anywhere;
 }
 
+.research-notes {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.research-block {
+  display: grid;
+  gap: 7px;
+  border: 1px solid #ead8c8;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fffaf5;
+}
+
+.research-block p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.source-list {
+  display: grid;
+  gap: 7px;
+}
+
+.source-list a {
+  color: #1f4fbf;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
 .capability-table {
   display: grid;
   gap: 10px;

@@ -238,17 +238,30 @@ Ignore any prior examples, prior test data, older resumes, or previous
 conversation context.
 
 Your task:
-1. Explain the company and role context in plain English.
-2. Identify what problem this role is likely trying to solve based on the job description.
-3. Write a conversational "Tell me about yourself" answer up to 2 minutes.
-4. Identify the candidate's role-specific USP from the job ad and resume evidence.
-5. Predict likely interview questions and explain why each question is likely.
-6. Highlight the highest-value preparation focus areas.
+1. Research the company using the supplied company name.
+2. If an interviewer name is supplied, research the person using public web information.
+3. Explain the company and role context in plain English.
+4. Identify what problem this role is likely trying to solve by combining company research with the job description.
+5. Write a conversational "Tell me about yourself" answer up to 2 minutes.
+6. Identify the candidate's role-specific USP from the job ad and resume evidence.
+7. Predict likely interview questions and explain why each question is likely.
+8. Highlight the highest-value preparation focus areas.
 
 Rules:
-- Do not browse or claim live company facts.
-- Use the company name and job description to infer company context. If the job description does not provide enough evidence, say "Based on the job description" and keep the wording cautious.
-- If an interviewer name is supplied, include a neutral interviewer context note. Do not invent their role, background, priorities, or personality.
+- If a company name is supplied, use web search to research what the company actually does, who it serves, and any relevant product, customer, industry, or operating context.
+- Prefer the company's official website, careers page, annual report, investor page, reputable business profiles, and credible news sources.
+- Do not rely only on the job description for companySnapshot or likelyCustomers when a company name is supplied.
+- If the company name is missing or web research is inconclusive, say this clearly in researchBasis and keep company context cautious.
+- CompanySnapshot should summarise what the company actually does based on research, not merely what the role description says.
+- LikelyCustomers should identify real customer/user groups where research supports it. If unclear, say it is unclear.
+- LikelyRoleProblem should combine researched company context with the job description. Make clear when something is inferred from the job ad.
+- SourceUrls should include 2-4 relevant public source URLs used for company research. If no reliable sources are found, return an empty array.
+- If an interviewer name is supplied, use web search to research the person. Use the company name as disambiguation when available.
+- Prefer official company leadership/team pages, LinkedIn public snippets, conference speaker pages, professional bios, credible interviews, and public articles.
+- InterviewerContext must be based on reliable public information about the person, not the job description.
+- If you cannot confidently identify the person, say so clearly in interviewerContext and interviewerResearchBasis.
+- Do not invent the interviewer's role, background, priorities, personality, or interview style.
+- InterviewerSourceUrls should include 1-3 relevant public source URLs used for interviewer research. If no reliable sources are found, return an empty array.
 - Do not invent candidate experience, metrics, tools, responsibilities, achievements, motivation, or seniority.
 - Treat additional candidate-provided context as truthful context supplied by the user, but do not broaden it.
 - The "Tell me about yourself" answer must sound natural when spoken.

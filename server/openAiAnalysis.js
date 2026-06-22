@@ -44,7 +44,20 @@ const analysisConfigs = {
     instructions: interviewPrepInstructions,
     schema: interviewPrepSchema,
     schemaName: "rolefit_interview_prep",
-    maxOutputTokens: 3600
+    maxOutputTokens: 4000,
+    tools: [
+      {
+        type: "web_search",
+        search_context_size: "low",
+        user_location: {
+          type: "approximate",
+          country: "AU",
+          city: "Sydney",
+          region: "New South Wales"
+        }
+      }
+    ],
+    reasoningEffort: "low"
   }
 };
 
@@ -80,8 +93,9 @@ export async function requestOpenAiAnalysis({
         interviewerName
       }),
       max_output_tokens: config.maxOutputTokens,
+      ...(config.tools ? { tools: config.tools } : {}),
       reasoning: {
-        effort: "minimal"
+        effort: config.reasoningEffort || "minimal"
       },
       text: {
         verbosity: "low",

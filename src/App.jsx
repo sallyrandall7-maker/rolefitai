@@ -1247,8 +1247,8 @@ function InterviewPrepPanel({
           <p className="panel-label">Interview Prep</p>
           <h2>Prepare Your Interview Angle</h2>
           <p>
-            Generate a role briefing, your opening answer, your USP, and likely
-            interview questions.
+            Research the company, then generate your opening answer, USP, and
+            likely interview questions.
           </p>
           <div className="interview-inputs">
             <label className="mini-field">
@@ -1308,7 +1308,35 @@ function InterviewPrepResults({ analysis }) {
             <p>{context.likelyRoleProblem}</p>
           </div>
         </div>
-        <p className="truth-note">{context.interviewerContext}</p>
+        <div className="research-notes">
+          <p className="truth-note">{context.researchBasis}</p>
+          <div className="research-block">
+            <span className="bullet-label">Interviewer research</span>
+            <p>{context.interviewerContext}</p>
+            <p className="truth-note">{context.interviewerResearchBasis}</p>
+            {safeList(context.interviewerSourceUrls).length ? (
+              <div className="source-list">
+                {safeList(context.interviewerSourceUrls).map((sourceUrl) => (
+                  <a href={sourceUrl} key={sourceUrl} rel="noreferrer" target="_blank">
+                    {sourceUrl}
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          {safeList(context.sourceUrls).length ? (
+            <div>
+              <span className="bullet-label">Research sources</span>
+              <div className="source-list">
+                {safeList(context.sourceUrls).map((sourceUrl) => (
+                  <a href={sourceUrl} key={sourceUrl} rel="noreferrer" target="_blank">
+                    {sourceUrl}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
       </ResultCard>
 
       <ResultCard title="Tell Me About Yourself" wide>
